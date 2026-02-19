@@ -322,29 +322,7 @@
             </div>
 
             <div>
-              <h3 class="font-semibold mb-3">History Summary</h3>
-              
-              <div id="withdrawal-summary-court" class="card-bg p-4 rounded-lg mb-4 flex justify-between items-center shadow-md border border-gray-700 hidden">
-                  <div class="text-center w-1/3 border-r border-gray-700">
-                      <p class="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Approved</p>
-                      <p id="count-approved" class="text-xl font-bold text-green-500">0</p>
-                  </div>
-                  <div class="text-center w-1/3 border-r border-gray-700">
-                      <p class="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Pending</p>
-                      <p id="count-pending" class="text-xl font-bold text-yellow-500">0</p>
-                  </div>
-                  <div class="text-center w-1/3">
-                      <p class="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Rejected</p>
-                      <p id="count-rejected" class="text-xl font-bold text-red-500">0</p>
-                  </div>
-              </div>
-
-              <div id="latest-approval-msg" class="hidden bg-green-900 bg-opacity-30 border border-green-500 p-3 rounded-lg mb-4 text-center">
-                  <p class="text-xs text-green-400 font-bold flex items-center justify-center gap-1">
-                      <i data-lucide="check-circle" class="w-4 h-4"></i> Your recent payment request was Accepted!
-                  </p>
-              </div>
-
+              <h3 class="font-semibold mb-3">History</h3>
               <div id="withdrawal-history-list" class="space-y-2"></div>
             </div>
           </div>
@@ -433,7 +411,7 @@
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc, serverTimestamp, query, where, getDocs, orderBy, limit, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc, serverTimestamp, query, where, getDocs, orderBy, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
@@ -443,7 +421,7 @@
     let userData = null;
     let activeTask = null; 
 
-    // CONFIG: Updated for 25 total
+    // CONFIG
     let appConfig = { 
         minWithdrawal: 5000, 
         dailyAdLimit: 25,
@@ -453,7 +431,7 @@
     };
     let userIP = null;
     let deviceId = null;
-    let withdrawalListener = null; // Store listener to unsubscribe
+    let withdrawalListener = null;
 
     const loader = document.getElementById('loader');
     const timerModal = document.getElementById('timer-modal');
@@ -467,9 +445,8 @@
 
     function showTelegramModal() {
         document.getElementById('telegram-modal').classList.remove('hidden');
-        lucide.createIcons(); // Refresh icons inside the modal
+        lucide.createIcons();
     }
-    // ---------------------------
 
     async function getIPAddress() {
       try {
@@ -492,7 +469,6 @@
       const userRef = doc(db, "users", currentUser.uid);
       const userSnap = await getDoc(userRef);
       
-      // Determine if user was created before today (Feb 20, 2026) -> Legacy User Free Bypass
       const userCreationTime = new Date(currentUser.metadata.creationTime).getTime();
       const cutoffTime = new Date('2026-02-20T23:59:59Z').getTime(); 
       const isLegacyUser = userCreationTime < cutoffTime;
@@ -501,20 +477,15 @@
         const user = userSnap.data();
         if (user.registeredDevice && user.registeredDevice.deviceId) {
           if (user.registeredDevice.deviceId !== deviceId) {
-            
             if (isLegacyUser) {
-              // Legacy users bypass the lock. Update their registered device seamlessly.
               const newDeviceData = { deviceId: deviceId, ip: userIP, registeredAt: serverTimestamp(), legacyReset: true };
               await updateDoc(userRef, { registeredDevice: newDeviceData });
-              if (userData) userData.registeredDevice = { deviceId: deviceId, ip: userIP }; // update local memory
+              if (userData) userData.registeredDevice = { deviceId: deviceId, ip: userIP };
             } else {
-              // New users get blocked strictly as before
               showAlert("⚠️ Multiple device detected! Please use your registered device.");
               return false;
             }
-
           } else {
-            // Same device, just update IP if needed
             if (user.registeredDevice.ip && user.registeredDevice.ip !== userIP) {
               await updateDoc(userRef, { 'lastIPChange': serverTimestamp() });
             }
@@ -545,7 +516,6 @@
               await signOut(auth);
               return false;
           }
-          // If legacy user, we just let them overwrite the session below
         }
       }
       await setDoc(doc(db, "active_sessions", currentUser.uid), {
@@ -556,7 +526,7 @@
 
     async function cleanupSession() {
       if (currentUser) {
-        try { await deleteDoc(doc(db, "active_sessions", currentUser.uid)); } catch (e) { console.log(e); }
+        try { await deleteDoc(doc(db, "active_sessions", currentUser.uid)); } catch (e) {}
       }
     }
 
@@ -574,11 +544,10 @@
         showLoader(true);
         if (!await checkActiveSession()) { showLoader(false); return; }
           
-        await fetchUserData(); // Ensure userData is populated
+        await fetchUserData();
         await fetchAppConfig();
         listenForNotifications();
         
-        // This will now seamlessly bypass existing users and update their device if mismatched
         if (!await checkDeviceSecurity()) { showLoader(false); return; }
           
         updateUI();
@@ -586,9 +555,7 @@
         navigateTo('home-page');
         showLoader(false);
 
-        // --- TRIGGER TELEGRAM POPUP HERE ---
         showTelegramModal(); 
-        // -----------------------------------
 
       } else {
         await cleanupSession();
@@ -600,53 +567,40 @@
         popupModal.classList.add('hidden');
     };
 
-    // Updated showNotificationPopup with visual distinction
     function showNotificationPopup(title, message, dateStr, isPrivate = false) {
         document.getElementById('popup-title').textContent = title || "New Notification";
         document.getElementById('popup-message').textContent = message || "";
         document.getElementById('popup-date').textContent = dateStr || "Just Now";
         
-        // Visual Changes for Private Message
         const card = document.getElementById('popup-card');
         const iconContainer = document.getElementById('popup-icon-container');
         const btn = document.getElementById('popup-btn');
         const icon = document.getElementById('popup-icon');
 
         if(isPrivate) {
-            // Green styling for private
             card.classList.remove('border-accent');
             card.classList.add('border-green-500');
-            
             iconContainer.classList.remove('bg-accent', 'shadow-orange-500/20');
             iconContainer.classList.add('bg-green-500', 'shadow-green-500/20');
-            
             btn.classList.remove('btn-accent');
             btn.classList.add('bg-green-600', 'hover:bg-green-700', 'text-white');
-            
-            // Optional: Change Icon for private
             icon.setAttribute('data-lucide', 'lock');
         } else {
-            // Revert to Orange (Accent) for global
             card.classList.add('border-accent');
             card.classList.remove('border-green-500');
-            
             iconContainer.classList.add('bg-accent', 'shadow-orange-500/20');
             iconContainer.classList.remove('bg-green-500', 'shadow-green-500/20');
-            
             btn.classList.add('btn-accent');
             btn.classList.remove('bg-green-600', 'hover:bg-green-700', 'text-white');
-            
             icon.setAttribute('data-lucide', 'bell-ring');
         }
         lucide.createIcons();
         popupModal.classList.remove('hidden');
     }
 
-    // --- MAIN NOTIFICATION LISTENER ---
     function listenForNotifications() {
-        // 1. Listen for GLOBAL Notifications
         const globalRef = collection(db, "global_notifications");
-        const qGlobal = query(globalRef, orderBy("createdAt", "desc"), limit(20));
+        const qGlobal = query(globalRef, orderBy("createdAt", "desc"));
         
         let isInitialLoad = true;
 
@@ -654,9 +608,7 @@
             const listContainer = document.getElementById("notification-list");
             const dot = document.getElementById("notification-dot");
             
-            // Only clear if empty state present
             if (snapshot.empty && listContainer.innerHTML.includes("No new notifications")) {
-               // keep empty state
             } else if (!snapshot.empty) {
                 if(listContainer.innerHTML.includes("No new notifications")) listContainer.innerHTML = "";
                 
@@ -673,19 +625,17 @@
                         <p class="text-xs text-gray-300 leading-relaxed">${data.message}</p>
                     </div>`;
                     
-                    // Avoid duplicating
                     if(!listContainer.innerHTML.includes(data.message)) {
                         listContainer.innerHTML += html;
                     }
                 });
                 lucide.createIcons();
                 
-                // POPUP LOGIC FOR GLOBAL
                 const changes = snapshot.docChanges();
                 changes.forEach(change => {
                     if (change.type === 'added' && !isInitialLoad) {
                         const data = change.doc.data();
-                        showNotificationPopup(data.title, data.message, "Just Now", false); // isPrivate = false
+                        showNotificationPopup(data.title, data.message, "Just Now", false);
                         dot.style.display = "block";
                     }
                 });
@@ -693,11 +643,9 @@
             isInitialLoad = false;
         });
 
-        // 2. Listen for PERSONAL Notifications (PRIVATE MESSAGES)
         if(currentUser && currentUser.uid) {
-            // Listen specifically to users/{uid}/notifications
             const personalRef = collection(db, "users", currentUser.uid, "notifications");
-            const qPersonal = query(personalRef, orderBy("createdAt", "desc"), limit(10));
+            const qPersonal = query(personalRef, orderBy("createdAt", "desc"));
             let isInitialPersonal = true;
 
             onSnapshot(qPersonal, (snapshot) => {
@@ -712,14 +660,11 @@
                         if (change.type === 'added') {
                             const data = change.doc.data();
                             
-                            // Trigger Popup ONLY for new messages arriving now (not on first load)
                             if(!isInitialPersonal) {
-                                // Show the "Court" (Popup) for Private Message -> TRUE for isPrivate
                                 showNotificationPopup(data.title, data.message, "Just Now", true);
                                 dot.style.display = "block";
                             }
 
-                            // Add to List (Prepend to show at top with Green Border)
                             const html = `
                             <div class="card-bg p-4 rounded-lg border-l-4 border-green-500 shadow-sm hover:bg-[#252525] transition-colors mb-3">
                                 <div class="flex justify-between items-start mb-1">
@@ -729,7 +674,6 @@
                                 <p class="text-xs text-gray-300 leading-relaxed">${data.message}</p>
                             </div>`;
                             
-                            // Insert at the beginning of the list
                             listContainer.insertAdjacentHTML('afterbegin', html);
                         }
                     });
@@ -739,7 +683,6 @@
             });
         }
     }
-    // --- END LISTENER ---
 
     function markNotificationsRead() {
         document.getElementById("notification-dot").style.display = "none";
@@ -838,7 +781,7 @@
         list.innerHTML = '<div class="animate-pulse">Loading...</div>';
 
         try {
-            const q = query(collection(db, "users"), where("referredBy", "==", currentUser.uid), limit(20));
+            const q = query(collection(db, "users"), where("referredBy", "==", currentUser.uid));
             const snap = await getDocs(q);
 
             if (snap.empty) {
@@ -870,7 +813,6 @@
             });
             lucide.createIcons();
         } catch (e) {
-            console.error(e);
             list.innerHTML = '<p class="text-red-400">Failed to load referrals.</p>';
         }
     }
@@ -945,7 +887,6 @@
 
     document.addEventListener("visibilitychange", async () => {
       if (document.visibilityState === "visible" && activeTask) {
-        
         const currentTime = Date.now();
         const timeSpentInSeconds = (currentTime - activeTask.startTime) / 1000;
         
@@ -962,7 +903,6 @@
           const remaining = Math.ceil(activeTask.duration - timeSpentInSeconds);
           showAlert(`❌ Task Failed! You returned too early.\nYou only waited ${Math.floor(timeSpentInSeconds)} seconds.\nPlease stay for the full ${activeTask.duration} seconds.`);
         }
-
         activeTask = null;
       }
     });
@@ -981,7 +921,6 @@
       }
 
       let newTotal = (userData.dailyAdCount || 0) + 1;
-      
       let currentTaskCounts = userData.taskCounts || {};
       if(taskId) {
           currentTaskCounts[taskId] = (currentTaskCounts[taskId] || 0) + 1;
@@ -1032,7 +971,6 @@
             document.getElementById('forgot-pass-view').classList.add('hidden');
             document.getElementById('login-view').classList.remove('hidden');
         } catch (error) {
-            console.error(error);
             if(error.code === 'auth/user-not-found') showAlert("❌ No user found with this email.");
             else showAlert("❌ Error sending reset link.");
         }
@@ -1052,7 +990,6 @@
         await updateProfile(res.user, { displayName: name });
         let referredByUid = null;
         
-        // CHECK REFERRAL CODE & APPLY BONUS
         if(refCode) {
            const q = query(collection(db, "users"), where("referralCode", "==", refCode));
            const querySnapshot = await getDocs(q);
@@ -1061,9 +998,7 @@
              const referrerData = referrerDoc.data();
              referredByUid = referrerData.uid;
 
-             // Logic: Check existing referrals for this referrer
              const currentCount = referrerData.referralCount || 0;
-             // CHANGED: Fixed 1000 coin reward
              const reward = 1000;
              
              await updateDoc(doc(db, "users", referredByUid), { 
@@ -1079,7 +1014,7 @@
           taskCounts: {},
           registeredDevice: { deviceId: deviceId, ip: userIP, registeredAt: serverTimestamp() }
         });
-      } catch (e) { showAlert(e.code === 'auth/email-already-in-use' ? "এই ইমেইল ইতিমধ্যে ব্যবহার করা হয়েছে।" : "অ্যাকাউন্ট তৈরি করা যাচ্ছে কাম।"); }
+      } catch (e) { showAlert(e.code === 'auth/email-already-in-use' ? "এই ইমেইল ইতিমধ্যে ব্যবহার করা হয়েছে।" : "অ্যাকাউন্ট তৈরি করা যাচ্ছে না।"); }
       showLoader(false);
     }
 
@@ -1092,7 +1027,6 @@
       showLoader(false);
     }
 
-    // --- UPDATED MANUAL REFERRAL WITH 1000 BONUS ---
     async function handleManualReferral() {
         const code = document.getElementById('manual-refer-code').value.trim().toUpperCase();
         if(!code) return showAlert("Please enter a code.");
@@ -1110,9 +1044,7 @@
                 const referrerDoc = querySnapshot.docs[0];
                 const referrerData = referrerDoc.data();
                 
-                // Logic: Check existing referrals
                 const currentCount = referrerData.referralCount || 0;
-                // CHANGED: Fixed 1000 coin reward
                 const reward = 1000;
 
                 await updateDoc(doc(db, "users", referrerData.uid), { 
@@ -1130,12 +1062,10 @@
                 document.getElementById('manual-refer-code').value = '';
             }
         } catch(e) {
-            console.error(e);
             showAlert("Something went wrong. Try again.");
         }
         showLoader(false);
     }
-    // --- END MANUAL REFERRAL ---
 
     async function handleWithdrawal() {
       if (userData.registeredDevice && userData.registeredDevice.deviceId !== deviceId) {
@@ -1161,7 +1091,7 @@
         userData.balance = newBalance;
         updateUI();
         showAlert("অনুরোধ পাঠানো হয়েছে!");
-        // History will update automatically via listener
+        
         document.getElementById('withdraw-amount').value = '';
         document.getElementById('payment-number').value = '';
         document.getElementById('conversion-preview').textContent = '';
@@ -1180,95 +1110,62 @@
         }
     });
 
-    // --- REAL-TIME WITHDRAWAL HISTORY (UPDATED WITH STATS AND ALERT) ---
+    // --- REAL-TIME PERMANENT WITHDRAWAL HISTORY ---
     function loadWithdrawalHistory() {
       const list = document.getElementById('withdrawal-history-list');
-      const summaryCourt = document.getElementById('withdrawal-summary-court');
-      const latestApprovalMsg = document.getElementById('latest-approval-msg');
-      const countApproved = document.getElementById('count-approved');
-      const countPending = document.getElementById('count-pending');
-      const countRejected = document.getElementById('count-rejected');
       
-      // Stop previous listener if exists
       if (withdrawalListener) {
         withdrawalListener();
       }
 
-      // Load up to 50 latest requests for accurate summary stats
-      const q = query(collection(db, "withdrawals"), where("userId", "==", currentUser.uid), orderBy("createdAt", "desc"), limit(50));
+      // Querying all history permanently (No limits)
+      const q = query(collection(db, "withdrawals"), where("userId", "==", currentUser.uid), orderBy("createdAt", "desc"));
       
       withdrawalListener = onSnapshot(q, (snap) => {
         list.innerHTML = "";
         
-        let approved = 0;
-        let pending = 0;
-        let rejected = 0;
-        let hasRecentApproval = false;
-        
         if (snap.empty) {
-            summaryCourt.classList.add('hidden');
-            latestApprovalMsg.classList.add('hidden');
-            list.innerHTML = '<p class="text-center text-gray-500 text-xs py-4">No history found.</p>';
+            list.innerHTML = '<div class="card-bg p-4 rounded-lg text-center text-gray-500 text-xs border border-gray-700">No payment history found.</div>';
             return;
         }
 
-        summaryCourt.classList.remove('hidden');
-
-        snap.forEach((d, index) => {
+        snap.forEach(d => {
             const data = d.data();
             
-            // Count Stats
-            if (data.status === 'approved') approved++;
-            else if (data.status === 'rejected') rejected++;
-            else pending++;
-
-            // Check if the most recent request (index 0) was approved
-            if (index === 0 && data.status === 'approved') {
-                hasRecentApproval = true;
-            }
-            
-            let dateStr = 'Date Pending';
+            let dateStr = 'Just Now';
             if(data.createdAt) {
                dateStr = new Date(data.createdAt.seconds * 1000).toLocaleString('en-US', {
                   month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
                });
             }
             
-            // Status Logic: Pending (Yellow), Approved (Green), Rejected (Red)
-            const statusColor = data.status === 'approved' ? 'border-green-500' : 
-                               (data.status === 'rejected' ? 'border-red-500' : 'border-yellow-500');
-            const statusText = data.status === 'approved' ? 'Approved' : 
-                              (data.status === 'rejected' ? 'Rejected' : 'Pending');
-            const statusTextColor = data.status === 'approved' ? 'text-green-500' : 
-                                   (data.status === 'rejected' ? 'text-red-500' : 'text-yellow-500');
+            let statusHtml = '';
+            let borderColor = '';
+
+            if (data.status === 'approved') {
+                statusHtml = '<span class="text-green-400 font-bold text-[10px] bg-green-900 bg-opacity-40 px-2 py-1 rounded border border-green-700">Approved</span>';
+                borderColor = 'border-green-500';
+            } else if (data.status === 'rejected') {
+                statusHtml = '<span class="text-red-400 font-bold text-[10px] bg-red-900 bg-opacity-40 px-2 py-1 rounded border border-red-700">Rejected</span>';
+                borderColor = 'border-red-500';
+            } else {
+                statusHtml = '<span class="text-yellow-400 font-bold text-[10px] bg-yellow-900 bg-opacity-40 px-2 py-1 rounded border border-yellow-700">Pending</span>';
+                borderColor = 'border-yellow-500';
+            }
 
             const html = `
-              <div class="card-bg p-3 rounded-lg flex flex-col gap-1 shadow-sm border-l-4 ${statusColor}">
+              <div class="card-bg p-3 rounded-lg flex flex-col gap-1 shadow-sm border-l-4 ${borderColor} transition-all duration-300">
                 <div class="flex justify-between items-center">
                    <span class="font-bold text-sm text-white">${data.amount} Coins</span>
-                   <span class="text-xs font-bold ${statusTextColor}">${statusText}</span>
+                   ${statusHtml}
                 </div>
-                <div class="flex justify-between items-center text-xs text-gray-400">
+                <div class="flex justify-between items-center text-[10px] text-gray-400 mt-1">
                    <span>${data.method} - ${data.number}</span>
                    <span>${dateStr}</span>
                 </div>
               </div>`;
             list.innerHTML += html;
         });
-
-        // Update Summary Data
-        countApproved.textContent = approved;
-        countPending.textContent = pending;
-        countRejected.textContent = rejected;
-
-        // Display Alert if latest was approved
-        if (hasRecentApproval) {
-            latestApprovalMsg.classList.remove('hidden');
-        } else {
-            latestApprovalMsg.classList.add('hidden');
-        }
-
-        lucide.createIcons(); // Ensure the check-circle icon renders
       });
     }
 
@@ -1281,11 +1178,8 @@
 
       if (navigator.share) {
         try {
-          await navigator.share({
-            title: 'Join Now',
-            text: message
-          });
-        } catch (e) { console.log(e); }
+          await navigator.share({ title: 'Join Now', text: message });
+        } catch (e) {}
       } else {
         try {
           await navigator.clipboard.writeText(message);
@@ -1326,7 +1220,6 @@
       };
       
       document.getElementById('reset-pass-btn').onclick = handlePasswordReset;
-
       document.getElementById('submit-refer-btn').onclick = handleManualReferral;
       document.getElementById('share-btn').onclick = handleShare;
     }
