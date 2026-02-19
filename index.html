@@ -491,20 +491,38 @@
     async function checkDeviceSecurity() {
       const userRef = doc(db, "users", currentUser.uid);
       const userSnap = await getDoc(userRef);
+      
+      // Determine if user was created before today (Feb 20, 2026) -> Legacy User Free Bypass
+      const userCreationTime = new Date(currentUser.metadata.creationTime).getTime();
+      const cutoffTime = new Date('2026-02-20T23:59:59Z').getTime(); 
+      const isLegacyUser = userCreationTime < cutoffTime;
+
       if (userSnap.exists()) {
         const user = userSnap.data();
         if (user.registeredDevice && user.registeredDevice.deviceId) {
           if (user.registeredDevice.deviceId !== deviceId) {
-            showAlert("⚠️ Multiple device detected! Please use your registered device.");
-            return false;
-          }
-          if (user.registeredDevice.ip && user.registeredDevice.ip !== userIP) {
-            await updateDoc(userRef, { 'lastIPChange': serverTimestamp() });
+            
+            if (isLegacyUser) {
+              // Legacy users bypass the lock. Update their registered device seamlessly.
+              const newDeviceData = { deviceId: deviceId, ip: userIP, registeredAt: serverTimestamp(), legacyReset: true };
+              await updateDoc(userRef, { registeredDevice: newDeviceData });
+              if (userData) userData.registeredDevice = { deviceId: deviceId, ip: userIP }; // update local memory
+            } else {
+              // New users get blocked strictly as before
+              showAlert("⚠️ Multiple device detected! Please use your registered device.");
+              return false;
+            }
+
+          } else {
+            // Same device, just update IP if needed
+            if (user.registeredDevice.ip && user.registeredDevice.ip !== userIP) {
+              await updateDoc(userRef, { 'lastIPChange': serverTimestamp() });
+            }
           }
         } else {
-          await updateDoc(userRef, {
-            registeredDevice: { deviceId: deviceId, ip: userIP, registeredAt: serverTimestamp() }
-          });
+          const newDeviceData = { deviceId: deviceId, ip: userIP, registeredAt: serverTimestamp() };
+          await updateDoc(userRef, { registeredDevice: newDeviceData });
+          if (userData) userData.registeredDevice = { deviceId: deviceId, ip: userIP };
         }
       }
       return true;
@@ -514,12 +532,20 @@
       const sessionsRef = collection(db, "active_sessions");
       const q = query(sessionsRef, where("userId", "==", currentUser.uid));
       const querySnapshot = await getDocs(q);
+
+      const userCreationTime = new Date(currentUser.metadata.creationTime).getTime();
+      const cutoffTime = new Date('2026-02-20T23:59:59Z').getTime();
+      const isLegacyUser = userCreationTime < cutoffTime;
+
       if (!querySnapshot.empty) {
         const session = querySnapshot.docs[0].data();
         if (session.deviceId !== deviceId) {
-          showAlert("Another device is already logged in with this account.");
-          await signOut(auth);
-          return false;
+          if (!isLegacyUser) {
+              showAlert("Another device is already logged in with this account.");
+              await signOut(auth);
+              return false;
+          }
+          // If legacy user, we just let them overwrite the session below
         }
       }
       await setDoc(doc(db, "active_sessions", currentUser.uid), {
@@ -548,10 +574,12 @@
         showLoader(true);
         if (!await checkActiveSession()) { showLoader(false); return; }
           
-        await fetchUserData();
+        await fetchUserData(); // Ensure userData is populated
         await fetchAppConfig();
         listenForNotifications();
-        await checkDeviceSecurity();
+        
+        // This will now seamlessly bypass existing users and update their device if mismatched
+        if (!await checkDeviceSecurity()) { showLoader(false); return; }
           
         updateUI();
         showMainPage('app-container');
