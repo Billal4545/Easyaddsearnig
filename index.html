@@ -322,8 +322,8 @@
             </div>
 
             <div>
-              <h3 class="font-semibold mb-3">History</h3>
-              <div id="withdrawal-history-list" class="space-y-2"></div>
+              <h3 class="font-semibold text-gray-300 mb-3 border-b border-gray-700 pb-2">Withdrawal History</h3>
+              <div id="withdrawal-history-list" class="space-y-3"></div>
             </div>
           </div>
 
@@ -438,7 +438,6 @@
     const countdownDisplay = document.getElementById('countdown-display');
     const popupModal = document.getElementById('notification-popup-modal');
 
-    // --- TELEGRAM MODAL LOGIC ---
     window.closeTelegramModal = () => {
         document.getElementById('telegram-modal').classList.add('hidden');
     }
@@ -1110,7 +1109,7 @@
         }
     });
 
-    // --- REAL-TIME PERMANENT WITHDRAWAL HISTORY ---
+    // --- REAL-TIME PERMANENT WITHDRAWAL HISTORY BOX ---
     function loadWithdrawalHistory() {
       const list = document.getElementById('withdrawal-history-list');
       
@@ -1142,19 +1141,20 @@
             let statusHtml = '';
             let borderColor = '';
 
+            // EXACT LOGIC TO UPDATE PENDING TO APPROVED FOREVER
             if (data.status === 'approved') {
-                statusHtml = '<span class="text-green-400 font-bold text-[10px] bg-green-900 bg-opacity-40 px-2 py-1 rounded border border-green-700">Approved</span>';
+                statusHtml = '<span class="text-green-400 font-bold text-[10px] bg-green-900 bg-opacity-40 px-2 py-1 rounded border border-green-700 flex items-center gap-1"><i data-lucide="check-circle" class="w-3 h-3"></i> Approved</span>';
                 borderColor = 'border-green-500';
             } else if (data.status === 'rejected') {
-                statusHtml = '<span class="text-red-400 font-bold text-[10px] bg-red-900 bg-opacity-40 px-2 py-1 rounded border border-red-700">Rejected</span>';
+                statusHtml = '<span class="text-red-400 font-bold text-[10px] bg-red-900 bg-opacity-40 px-2 py-1 rounded border border-red-700 flex items-center gap-1"><i data-lucide="x-circle" class="w-3 h-3"></i> Rejected</span>';
                 borderColor = 'border-red-500';
             } else {
-                statusHtml = '<span class="text-yellow-400 font-bold text-[10px] bg-yellow-900 bg-opacity-40 px-2 py-1 rounded border border-yellow-700">Pending</span>';
+                statusHtml = '<span class="text-yellow-400 font-bold text-[10px] bg-yellow-900 bg-opacity-40 px-2 py-1 rounded border border-yellow-700 flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> Pending</span>';
                 borderColor = 'border-yellow-500';
             }
 
             const html = `
-              <div class="card-bg p-3 rounded-lg flex flex-col gap-1 shadow-sm border-l-4 ${borderColor} transition-all duration-300">
+              <div class="card-bg p-3 rounded-lg flex flex-col gap-2 shadow-sm border-l-4 ${borderColor} transition-all duration-300">
                 <div class="flex justify-between items-center">
                    <span class="font-bold text-sm text-white">${data.amount} Coins</span>
                    ${statusHtml}
@@ -1166,6 +1166,8 @@
               </div>`;
             list.innerHTML += html;
         });
+        
+        lucide.createIcons(); // Instantly update the icons inside the history
       });
     }
 
