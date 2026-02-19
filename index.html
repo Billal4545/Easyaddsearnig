@@ -69,13 +69,19 @@
             
             <div class="bg-[#121212] p-4 rounded-lg mb-6 text-center border border-gray-700">
                 <p class="text-gray-200 text-sm leading-relaxed">
-                    সবাইকে আমাদের টেলিগ্রাম চ্যানেলে জয়েন করতে হবে। সকল আপডেট বা পরবর্তী আপডেট এখানে দেওয়া হবে।
+                    সবাইকে আমাদের টেলিগ্রাম চ্যানেল এবং গ্রুপে জয়েন করতে হবে। সকল আপডেট বা পরবর্তী আপডেট এখানে দেওয়া হবে।
                 </p>
             </div>
 
-            <a href="https://t.me/Easyearningpayment" target="_blank" onclick="closeTelegramModal()" class="block w-full bg-[#0088cc] hover:bg-[#0077b5] text-white py-3 rounded-lg font-bold shadow-lg transition transform active:scale-95 flex items-center justify-center gap-2">
-                <i data-lucide="send" class="w-5 h-5"></i> জয়েন করুন (Join Now)
-            </a>
+            <div class="space-y-3">
+                <a href="https://t.me/Easyearningpayment" target="_blank" onclick="closeTelegramModal()" class="block w-full bg-[#0088cc] hover:bg-[#0077b5] text-white py-3 rounded-lg font-bold shadow-lg transition transform active:scale-95 flex items-center justify-center gap-2">
+                    <i data-lucide="send" class="w-5 h-5"></i> চ্যানেল (Channel)
+                </a>
+                
+                <a href="https://t.me/esyearninggroup" target="_blank" onclick="closeTelegramModal()" class="block w-full border-2 border-[#0088cc] text-[#0088cc] hover:bg-[#0088cc] hover:text-white py-3 rounded-lg font-bold shadow-lg transition transform active:scale-95 flex items-center justify-center gap-2">
+                    <i data-lucide="users" class="w-5 h-5"></i> গ্রুপ (Group)
+                </a>
+            </div>
             
             <button onclick="closeTelegramModal()" class="mt-4 text-gray-500 text-xs hover:text-white transition">Close</button>
         </div>
@@ -332,7 +338,7 @@
                 
               <button id="share-btn" class="w-full p-3 rounded-lg btn-accent shadow-md">Share With Friends</button>
               
-              <p class="text-sm text-gray-400 mt-4 text-center">প্রতি রেফারে <span class="text-accent font-bold">১০০ কয়েন</span> বোনাস পাবেন!</p>
+              <p class="text-sm text-gray-400 mt-4 text-center">প্রতি রেফারে <span class="text-accent font-bold">১০০০ কয়েন</span> বোনাস পাবেন!</p>
               
               <div class="mt-8 border-t border-gray-700 pt-6">
                 <h3 class="font-bold text-white mb-2 text-sm">Have a Referral Code?</h3>
@@ -1007,8 +1013,8 @@
 
              // Logic: Check existing referrals for this referrer
              const currentCount = referrerData.referralCount || 0;
-             // CHANGED: Fixed 100 coin reward
-             const reward = 100;
+             // CHANGED: Fixed 1000 coin reward
+             const reward = 1000;
              
              await updateDoc(doc(db, "users", referredByUid), { 
                  balance: (referrerData.balance || 0) + reward,
@@ -1032,11 +1038,11 @@
       const pass = document.getElementById('login-password').value;
       showLoader(true);
       try { await signInWithEmailAndPassword(auth, email, pass); }
-      catch (e) { showAlert(e.code === 'auth/user-not-found' ? "অ্যাকাউন্ট খুঁজে পাওয়া যায়নি।" : "লগইন ব্যর্থ হয়েছে।"); }
+      catch (e) { showAlert(e.code === 'auth/user-not-found' ? "অ্যাকাউন্ট খুঁজে পাওয়া যায়নি।" : "ল জরিমানা লগইন ব্যর্থ হয়েছে।"); }
       showLoader(false);
     }
 
-    // --- UPDATED MANUAL REFERRAL WITH TIERED BONUS ---
+    // --- UPDATED MANUAL REFERRAL WITH 1000 BONUS ---
     async function handleManualReferral() {
         const code = document.getElementById('manual-refer-code').value.trim().toUpperCase();
         if(!code) return showAlert("Please enter a code.");
@@ -1056,8 +1062,8 @@
                 
                 // Logic: Check existing referrals
                 const currentCount = referrerData.referralCount || 0;
-                // CHANGED: Fixed 100 coin reward
-                const reward = 100;
+                // CHANGED: Fixed 1000 coin reward
+                const reward = 1000;
 
                 await updateDoc(doc(db, "users", referrerData.uid), { 
                     balance: (referrerData.balance || 0) + reward,
