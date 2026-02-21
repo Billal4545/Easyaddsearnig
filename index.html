@@ -351,7 +351,10 @@
               </div>
 
               <div class="mt-6 border-t border-gray-700 pt-6">
-                 <h3 class="font-bold text-white mb-3 text-sm">My Referrals</h3>
+                 <h3 class="font-bold text-white mb-3 text-sm flex justify-between items-center">
+                    <span>My Referrals</span>
+                    <span class="text-accent bg-[#0b0e14] px-2 py-1 rounded border border-gray-700 text-xs">Total: <span id="total-referrals-count">0</span></span>
+                 </h3>
                  <div id="referral-list" class="space-y-2 text-center text-gray-400 text-xs">
                    Loading...
                  </div>
@@ -776,13 +779,17 @@
       if(pageId === 'refer-page') loadReferralList();
     }
 
+    // UPDATED FUNCTION: Now updates the total count dynamically
     async function loadReferralList() {
         const list = document.getElementById('referral-list');
+        const totalCountEl = document.getElementById('total-referrals-count');
         list.innerHTML = '<div class="animate-pulse">Loading...</div>';
 
         try {
             const q = query(collection(db, "users"), where("referredBy", "==", currentUser.uid));
             const snap = await getDocs(q);
+
+            if (totalCountEl) totalCountEl.textContent = snap.size;
 
             if (snap.empty) {
                 list.innerHTML = '<p class="text-gray-500">No referrals yet.</p>';
@@ -814,6 +821,7 @@
             lucide.createIcons();
         } catch (e) {
             list.innerHTML = '<p class="text-red-400">Failed to load referrals.</p>';
+            if(totalCountEl) totalCountEl.textContent = "0";
         }
     }
 
@@ -1240,4 +1248,3 @@
   </script>
 </body>
 </html>
-
