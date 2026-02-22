@@ -872,6 +872,10 @@
     }
 
     window.visitWebsite = async function(url, seconds, taskId) {
+      if (activeTask) {
+          showAlert("A task is already running! Please wait.");
+          return;
+      }
       if (!await validateTask(taskId)) return;
 
       let finalUrl = url;
@@ -879,7 +883,6 @@
           finalUrl = 'https://' + finalUrl;
       }
 
-      // Open the external page and store a reference to the window
       const taskWindow = window.open(finalUrl, '_blank');
 
       activeTask = {
@@ -887,50 +890,59 @@
         duration: seconds,
         startTime: Date.now(), 
         taskId: taskId,
-        window: taskWindow // Storing the window to close it later
+        window: taskWindow,
+        isCompleted: false
       };
 
       timerModal.classList.remove('hidden');
-      
       const modalTitle = timerModal.querySelector('h3');
       const modalDesc = timerModal.querySelector('p');
       
       if(modalTitle) modalTitle.textContent = "Verifying Task...";
       if(modalDesc) modalDesc.textContent = `Please stay on the website. Auto-returning in ${seconds}s...`;
 
-      let timeLeft = seconds;
-      countdownDisplay.textContent = timeLeft;
+      countdownDisplay.textContent = seconds;
 
-      // Real countdown timer starts here
       activeTask.interval = setInterval(async () => {
-        timeLeft--;
-        countdownDisplay.textContent = timeLeft;
+        if (!activeTask || activeTask.isCompleted) {
+            clearInterval(activeTask ? activeTask.interval : undefined);
+            return;
+        }
+
+        const elapsed = Math.floor((Date.now() - activeTask.startTime) / 1000);
+        let timeLeft = activeTask.duration - elapsed;
 
         if (timeLeft <= 0) {
+          timeLeft = 0;
+          activeTask.isCompleted = true; 
           clearInterval(activeTask.interval);
+          countdownDisplay.textContent = "0";
           
-          // Force close the target window to return user back to the app
           if (activeTask.window && !activeTask.window.closed) {
               activeTask.window.close();
           }
 
           timerModal.classList.add('hidden');
           
-          await addReward(50, activeTask.taskId);
+          const currentTaskId = activeTask.taskId;
           activeTask = null;
+
+          await addReward(50, currentTaskId);
+        } else {
+          countdownDisplay.textContent = timeLeft;
         }
       }, 1000);
     }
 
-    // Handles the event if the user tries to manually return early before the timer ends
     document.addEventListener("visibilitychange", async () => {
-      if (document.visibilityState === "visible" && activeTask) {
+      if (document.visibilityState === "visible" && activeTask && !activeTask.isCompleted) {
         const currentTime = Date.now();
         const timeSpentInSeconds = (currentTime - activeTask.startTime) / 1000;
         
-        // If they returned before the timer finished
         if (timeSpentInSeconds < activeTask.duration) {
-          clearInterval(activeTask.interval); // Stop the countdown
+          if (activeTask.interval) {
+              clearInterval(activeTask.interval);
+          }
           timerModal.classList.add('hidden');
 
           const modalTitle = timerModal.querySelector('h3');
@@ -938,9 +950,10 @@
           if(modalTitle) modalTitle.textContent = "Please Wait";
           if(modalDesc) modalDesc.textContent = "Do not close the browser or app.";
 
-          showAlert(`❌ Task Failed! You returned too early.\nYou only waited ${Math.floor(timeSpentInSeconds)} seconds.\nPlease stay for the full ${activeTask.duration} seconds.`);
-          
+          const requiredTime = activeTask.duration;
           activeTask = null;
+
+          showAlert(`❌ Task Failed! You returned too early.\nYou only waited ${Math.floor(timeSpentInSeconds)} seconds.\nPlease stay for the full ${requiredTime} seconds.`);
         }
       }
     });
