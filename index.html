@@ -228,10 +228,10 @@
                     <span class="text-3xl">🌐</span>
                     <div>
                       <h3 class="font-semibold text-white">Website Visit 1</h3>
-                      <p class="text-xs text-gray-400">Wait 30 Seconds (Limit 5)</p>
+                      <p class="text-xs text-gray-400">Wait 20 Seconds (Limit 5)</p>
                     </div>
                   </div>
-                  <button class="bg-[#00ff9d] text-black font-bold px-6 py-2 rounded-lg text-sm btn" onclick="visitWebsite('earnigblog1.blogspot.com', 30, 'task_visit1')">Visit</button>
+                  <button class="bg-[#00ff9d] text-black font-bold px-6 py-2 rounded-lg text-sm btn" onclick="visitWebsite('earnigblog1.blogspot.com', 20, 'task_visit1')">Visit</button>
                 </div>
 
                 <div class="card-bg p-3 rounded-lg flex items-center justify-between transform active:scale-95 transition border border-gray-800">
@@ -239,10 +239,10 @@
                       <span class="text-3xl">🌐</span>
                       <div>
                         <h3 class="font-semibold text-white">Website Visit 2</h3>
-                        <p class="text-xs text-gray-400">Wait 30 Seconds (Limit 5)</p>
+                        <p class="text-xs text-gray-400">Wait 20 Seconds (Limit 5)</p>
                       </div>
                     </div>
-                    <button class="bg-[#00ff9d] text-black font-bold px-6 py-2 rounded-lg text-sm btn" onclick="visitWebsite('earningpost2.blogspot.com', 30, 'task_visit2')">Visit</button>
+                    <button class="bg-[#00ff9d] text-black font-bold px-6 py-2 rounded-lg text-sm btn" onclick="visitWebsite('earningpost2.blogspot.com', 20, 'task_visit2')">Visit</button>
                   </div>
         
                   <div class="card-bg p-3 rounded-lg flex items-center justify-between transform active:scale-95 transition border border-gray-800">
@@ -250,10 +250,10 @@
                       <span class="text-3xl">🌐</span>
                       <div>
                         <h3 class="font-semibold text-white">Website Visit 3</h3>
-                        <p class="text-xs text-gray-400">Wait 30 Seconds (Limit 5)</p>
+                        <p class="text-xs text-gray-400">Wait 20 Seconds (Limit 5)</p>
                       </div>
                     </div>
-                    <button class="bg-[#00ff9d] text-black font-bold px-6 py-2 rounded-lg text-sm btn" onclick="visitWebsite('earningblog3.blogspot.com', 30, 'task_visit3')">Visit</button>
+                    <button class="bg-[#00ff9d] text-black font-bold px-6 py-2 rounded-lg text-sm btn" onclick="visitWebsite('earningblog3.blogspot.com', 20, 'task_visit3')">Visit</button>
                   </div>
         
                   <div class="card-bg p-3 rounded-lg flex items-center justify-between transform active:scale-95 transition border border-gray-800">
@@ -261,10 +261,10 @@
                       <span class="text-3xl">🌐</span>
                       <div>
                         <h3 class="font-semibold text-white">Website Visit 4</h3>
-                        <p class="text-xs text-gray-400">Wait 30 Seconds (Limit 5)</p>
+                        <p class="text-xs text-gray-400">Wait 20 Seconds (Limit 5)</p>
                       </div>
                     </div>
-                    <button class="bg-[#00ff9d] text-black font-bold px-6 py-2 rounded-lg text-sm btn" onclick="visitWebsite('earningpost4.blogspot.com', 30, 'task_special')">Visit</button>
+                    <button class="bg-[#00ff9d] text-black font-bold px-6 py-2 rounded-lg text-sm btn" onclick="visitWebsite('earningpost4.blogspot.com', 20, 'task_special')">Visit</button>
                   </div>
 
                 <div class="card-bg p-3 rounded-lg flex items-center justify-between transform active:scale-95 transition border border-gray-800">
@@ -272,10 +272,10 @@
                     <span class="text-3xl">🌐</span>
                     <div>
                       <h3 class="font-semibold text-white">Website Visit 5</h3>
-                      <p class="text-xs text-gray-400">Wait 30 Seconds (Limit 5)</p>
+                      <p class="text-xs text-gray-400">Wait 20 Seconds (Limit 5)</p>
                     </div>
                   </div>
-                  <button class="bg-[#00ff9d] text-black font-bold px-6 py-2 rounded-lg text-sm btn" onclick="visitWebsite('earningpost5.blogspot.com', 30, 'task_game')">Visit</button>
+                  <button class="bg-[#00ff9d] text-black font-bold px-6 py-2 rounded-lg text-sm btn" onclick="visitWebsite('earningpost5.blogspot.com', 20, 'task_game')">Visit</button>
                 </div>
 
               </div>
@@ -874,44 +874,74 @@
     window.visitWebsite = async function(url, seconds, taskId) {
       if (!await validateTask(taskId)) return;
 
+      let finalUrl = url;
+      if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
+          finalUrl = 'https://' + finalUrl;
+      }
+
+      // Open the external page and store a reference to the window
+      const taskWindow = window.open(finalUrl, '_blank');
+
       activeTask = {
-        url: url,
+        url: finalUrl,
         duration: seconds,
         startTime: Date.now(), 
-        taskId: taskId 
+        taskId: taskId,
+        window: taskWindow // Storing the window to close it later
       };
 
-      window.open(url, '_blank');
-
       timerModal.classList.remove('hidden');
-      countdownDisplay.textContent = "⏳"; 
       
       const modalTitle = timerModal.querySelector('h3');
       const modalDesc = timerModal.querySelector('p');
       
       if(modalTitle) modalTitle.textContent = "Verifying Task...";
-      if(modalDesc) modalDesc.textContent = `Please stay on the website for ${seconds} seconds. Do not come back early!`;
+      if(modalDesc) modalDesc.textContent = `Please stay on the website. Auto-returning in ${seconds}s...`;
+
+      let timeLeft = seconds;
+      countdownDisplay.textContent = timeLeft;
+
+      // Real countdown timer starts here
+      activeTask.interval = setInterval(async () => {
+        timeLeft--;
+        countdownDisplay.textContent = timeLeft;
+
+        if (timeLeft <= 0) {
+          clearInterval(activeTask.interval);
+          
+          // Force close the target window to return user back to the app
+          if (activeTask.window && !activeTask.window.closed) {
+              activeTask.window.close();
+          }
+
+          timerModal.classList.add('hidden');
+          
+          await addReward(50, activeTask.taskId);
+          activeTask = null;
+        }
+      }, 1000);
     }
 
+    // Handles the event if the user tries to manually return early before the timer ends
     document.addEventListener("visibilitychange", async () => {
       if (document.visibilityState === "visible" && activeTask) {
         const currentTime = Date.now();
         const timeSpentInSeconds = (currentTime - activeTask.startTime) / 1000;
         
-        timerModal.classList.add('hidden');
+        // If they returned before the timer finished
+        if (timeSpentInSeconds < activeTask.duration) {
+          clearInterval(activeTask.interval); // Stop the countdown
+          timerModal.classList.add('hidden');
 
-        const modalTitle = timerModal.querySelector('h3');
-        const modalDesc = timerModal.querySelector('p');
-        if(modalTitle) modalTitle.textContent = "Please Wait";
-        if(modalDesc) modalDesc.textContent = "Do not close the browser or app.";
+          const modalTitle = timerModal.querySelector('h3');
+          const modalDesc = timerModal.querySelector('p');
+          if(modalTitle) modalTitle.textContent = "Please Wait";
+          if(modalDesc) modalDesc.textContent = "Do not close the browser or app.";
 
-        if (timeSpentInSeconds >= activeTask.duration) {
-          await addReward(50, activeTask.taskId);
-        } else {
-          const remaining = Math.ceil(activeTask.duration - timeSpentInSeconds);
           showAlert(`❌ Task Failed! You returned too early.\nYou only waited ${Math.floor(timeSpentInSeconds)} seconds.\nPlease stay for the full ${activeTask.duration} seconds.`);
+          
+          activeTask = null;
         }
-        activeTask = null;
       }
     });
 
