@@ -13,47 +13,32 @@
 
   <style>
     body { font-family: 'Inter', sans-serif; background-color: #0b0e14; color: #ffffff; }
-    /* Mobile-like container centered on desktop */
     .app-wrapper { max-width: 28rem; margin: 0 auto; min-height: 100vh; position: relative; background-color: #0b0e14; border-left: 1px solid #1f2937; border-right: 1px solid #1f2937; }
-      
     .card-bg { background-color: #161b22; }
-    /* Updated Accent Colors to match the image's mint-green/cyan */
     .text-accent { color: #00ff9d; }
     .bg-accent { background-color: #00ff9d; }
     .border-accent { border-color: #00ff9d; }
-      
     .btn { transition: all 0.2s ease-in-out; transform: scale(1); }
     .btn:active { transform: scale(0.95); }
     .btn-accent { background-color: #00ff9d; color: #000000; font-weight: bold; }
     .btn-accent:hover { background-color: #00d684; }
-      
     .input-field { background-color: #1a202c; border: 1px solid #2d3748; color: white; }
-      
-    /* Page Visibility Logic */
     .main-page { display: none; }
     .main-page.active { display: flex; animation: fadeIn 0.5s ease-in-out; }
     .sub-page { display: none; }
     .sub-page.active { display: block; animation: fadeIn 0.3s ease-in-out; }
-      
     .bottom-nav a.active { color: #00ff9d; }
-      
     .notification-dot {
       position: absolute; top: 0; right: 0; width: 10px; height: 10px;
       background-color: #ef4444; border-radius: 50%; border: 2px solid #0b0e14; display: none;
       animation: pulse 2s infinite;
     }
-
-    /* Popup Modal Animation */
     .popup-animation { animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     @keyframes pulse { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
-    
-    /* Telegram Button Pulse */
     .tg-pulse { animation: pulse-blue 2s infinite; }
     @keyframes pulse-blue { 0% { box-shadow: 0 0 0 0 rgba(0, 136, 204, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(0, 136, 204, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 136, 204, 0); } }
-
   </style>
 </head>
 
@@ -61,54 +46,36 @@
       
       <div id="telegram-modal" class="hidden fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-[110] p-6 backdrop-blur-sm">
         <div class="bg-gray-800 rounded-xl p-6 w-full max-w-sm text-center border-2 border-[#0088cc] shadow-[0_0_30px_rgba(0,136,204,0.3)] relative popup-animation">
-            
             <div class="w-16 h-16 bg-[#0088cc] rounded-full flex items-center justify-center mx-auto mb-4 text-white shadow-lg tg-pulse">
                 <i data-lucide="send" class="w-8 h-8 ml-[-2px] mt-[2px]"></i>
             </div>
-
             <h3 class="text-xl font-bold text-white mb-3">গুরুত্বপূর্ণ নোটিশ!</h3>
-            
             <div class="bg-[#121212] p-4 rounded-lg mb-6 text-center border border-gray-700">
-                <p class="text-gray-200 text-sm leading-relaxed">
-                    সবাইকে আমাদের টেলিগ্রাম চ্যানেল এবং গ্রুপে জয়েন করতে হবে। সকল আপডেট বা পরবর্তী আপডেট এখানে দেওয়া হবে।
-                </p>
+                <p class="text-gray-200 text-sm leading-relaxed">সবাইকে আমাদের টেলিগ্রাম চ্যানেল এবং গ্রুপে জয়েন করতে হবে।</p>
             </div>
-
             <div class="space-y-3">
                 <a href="https://t.me/Easyearningpayment" target="_blank" onclick="closeTelegramModal()" class="block w-full bg-[#0088cc] hover:bg-[#0077b5] text-white py-3 rounded-lg font-bold shadow-lg transition transform active:scale-95 flex items-center justify-center gap-2">
                     <i data-lucide="send" class="w-5 h-5"></i> চ্যানেল (Channel)
                 </a>
-                
                 <a href="https://t.me/esyearninggroup" target="_blank" onclick="closeTelegramModal()" class="block w-full border-2 border-[#0088cc] text-[#0088cc] hover:bg-[#0088cc] hover:text-white py-3 rounded-lg font-bold shadow-lg transition transform active:scale-95 flex items-center justify-center gap-2">
                     <i data-lucide="users" class="w-5 h-5"></i> গ্রুপ (Group)
                 </a>
             </div>
-            
             <button onclick="closeTelegramModal()" class="mt-4 text-gray-500 text-xs hover:text-white transition">Close</button>
         </div>
       </div>
+
       <div id="notification-popup-modal" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[90] p-6 backdrop-blur-sm">
         <div id="popup-card" class="bg-gray-800 rounded-xl p-6 w-full max-w-sm text-center border-t-4 border-accent shadow-2xl relative popup-animation">
-            
-            <button onclick="closeNotificationPopup()" class="absolute top-3 right-3 text-gray-400 hover:text-white transition">
-                <i data-lucide="x" class="w-5 h-5"></i>
-            </button>
-
-            <div id="popup-icon-container" class="w-16 h-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-4 text-black shadow-lg shadow-[#00ff9d]/20">
-                <i id="popup-icon" data-lucide="bell-ring" class="w-8 h-8"></i>
-            </div>
-
+            <button onclick="closeNotificationPopup()" class="absolute top-3 right-3 text-gray-400 hover:text-white transition"><i data-lucide="x" class="w-5 h-5"></i></button>
+            <div id="popup-icon-container" class="w-16 h-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-4 text-black shadow-lg shadow-[#00ff9d]/20"><i id="popup-icon" data-lucide="bell-ring" class="w-8 h-8"></i></div>
             <h3 id="popup-title" class="text-xl font-bold text-white mb-2">New Message</h3>
-            
-            <div class="bg-[#121212] p-3 rounded-lg mb-4 text-left border border-gray-700">
-                <p id="popup-message" class="text-gray-300 text-sm leading-relaxed">...</p>
-            </div>
-
+            <div class="bg-[#121212] p-3 rounded-lg mb-4 text-left border border-gray-700"><p id="popup-message" class="text-gray-300 text-sm leading-relaxed">...</p></div>
             <p id="popup-date" class="text-[10px] text-gray-500 mb-6 font-mono">Just Now</p>
-
             <button onclick="closeNotificationPopup()" id="popup-btn" class="w-full btn-accent py-3 rounded-lg font-bold shadow-lg">Okay, Got it</button>
         </div>
       </div>
+
       <div id="loader" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[70]">
         <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-accent"></div>
       </div>
@@ -124,44 +91,29 @@
       <div id="auth-section" class="min-h-screen p-6 flex-col justify-center main-page">
         <h1 class="text-3xl font-bold text-center mb-2 text-accent">Earning2</h1>
         <p class="text-center text-gray-400 mb-8">Login or Signup to continue</p>
-
         <div id="auth-container">
           <div id="login-view">
             <input id="login-email" type="email" placeholder="Email" class="w-full p-3 rounded-lg input-field mb-4">
             <input id="login-password" type="password" placeholder="Password" class="w-full p-3 rounded-lg input-field mb-2">
-            
             <p class="text-right text-xs text-gray-400 mb-6 cursor-pointer hover:text-accent transition" id="show-forgot-pass">Forgot Password?</p>
-
             <button id="login-btn" class="w-full p-3 rounded-lg btn-accent mb-4">Login</button>
-            <p class="text-center text-gray-400">Don't have an account?
-              <a href="#" id="show-signup" class="font-semibold text-accent">Sign Up</a>
-            </p>
+            <p class="text-center text-gray-400">Don't have an account? <a href="#" id="show-signup" class="font-semibold text-accent">Sign Up</a></p>
           </div>
-
           <div id="signup-view" class="hidden">
             <input id="signup-name" type="text" placeholder="Full Name" class="w-full p-3 rounded-lg input-field mb-4">
             <input id="signup-email" type="email" placeholder="Email" class="w-full p-3 rounded-lg input-field mb-4">
             <input id="signup-password" type="password" placeholder="Password" class="w-full p-3 rounded-lg input-field mb-4">
             <input id="signup-referral" type="text" placeholder="Referral Code (Optional)" class="w-full p-3 rounded-lg input-field mb-4 border-dashed border-accent">
-              
             <button id="signup-btn" class="w-full p-3 rounded-lg btn-accent mb-4">Sign Up</button>
-            <p class="text-center text-gray-400">Already have an account?
-              <a href="#" id="show-login" class="font-semibold text-accent">Login</a>
-            </p>
+            <p class="text-center text-gray-400">Already have an account? <a href="#" id="show-login" class="font-semibold text-accent">Login</a></p>
           </div>
-
           <div id="forgot-pass-view" class="hidden">
             <h2 class="text-xl font-bold text-center mb-4 text-white">Reset Password</h2>
             <p class="text-center text-gray-400 text-sm mb-6">Enter your email address to receive a password reset link.</p>
-            
             <input id="reset-email" type="email" placeholder="Enter your email" class="w-full p-3 rounded-lg input-field mb-6">
-            
             <button id="reset-pass-btn" class="w-full p-3 rounded-lg btn-accent mb-4">Send Reset Link</button>
-            <p class="text-center text-gray-400">
-              <a href="#" id="back-to-login" class="font-semibold text-accent">Back to Login</a>
-            </p>
+            <p class="text-center text-gray-400"><a href="#" id="back-to-login" class="font-semibold text-accent">Back to Login</a></p>
           </div>
-
         </div>
       </div>
 
@@ -173,23 +125,20 @@
               <i data-lucide="bell" class="w-6 h-6 text-gray-300"></i>
               <div id="notification-dot" class="notification-dot"></div>
             </div>
-            
             <button id="header-profile-btn" class="p-2 hover:bg-gray-800 rounded-full transition cursor-pointer">
                 <i data-lucide="user" class="w-6 h-6 text-gray-300"></i>
             </button>
-
           </div>
         </header>
 
         <main class="flex-grow overflow-y-auto pb-20">
-            
           <div id="home-page" class="p-4 space-y-6 sub-page">
             <div class="card-bg p-4 rounded-lg flex items-center justify-between border-l-4 border-accent shadow-lg">
               <div>
                 <p class="text-gray-400 text-sm">Your Balance</p>
                 <p class="text-3xl font-bold text-white"><span id="coin-balance">0</span> Coins</p>
               </div>
-              <button onclick="navigateTo('wallet-page')" class="bg-white text-black font-semibold px-6 py-2 rounded-lg hover:bg-gray-200 transition">Withdraw</button>
+              <button onclick="window.navigateTo('wallet-page')" class="bg-white text-black font-semibold px-6 py-2 rounded-lg hover:bg-gray-200 transition">Withdraw</button>
             </div>
 
             <section>
@@ -213,7 +162,6 @@
               </div>
 
               <div class="space-y-3">
-                
                 <div class="bg-[#00ff9d] p-3 rounded-lg flex items-center justify-between text-black shadow-md transform active:scale-95 transition">
                   <div class="flex items-center space-x-3">
                     <span class="text-3xl">🤩</span>
@@ -279,7 +227,6 @@
                   </div>
                   <button class="bg-[#00ff9d] text-black font-bold px-6 py-2 rounded-lg text-sm btn" onclick="visitWebsite('earningpost5.blogspot.com', 20, 'task_game')">Visit</button>
                 </div>
-
               </div>
             </section>
           </div>
@@ -302,15 +249,12 @@
             <div class="card-bg p-4 rounded-lg shadow-lg border border-gray-800">
               <p class="text-sm text-gray-400 mb-1">Available Balance:</p>
               <p class="text-3xl font-bold text-accent mb-2"><span id="wallet-coin-balance">0</span> Coins</p>
-                
               <div class="text-xs bg-[#0b0e14] text-gray-300 p-2 rounded mb-4 flex items-center justify-center gap-2 border border-gray-800">
                  <i data-lucide="info" class="w-3 h-3 text-accent"></i>
                  <span id="rate-display">Loading Rate...</span>
               </div>
-                
               <input id="withdraw-amount" type="number" placeholder="Enter coin amount" class="w-full p-3 rounded-lg input-field mb-2 focus:border-accent focus:outline-none transition">
               <p class="text-xs text-[#00ff9d] text-right mb-3 h-4" id="conversion-preview"></p>
-
               <select id="withdraw-method" class="w-full p-3 rounded-lg input-field mb-3 focus:border-accent focus:outline-none transition">
                 <option value="Bkash">Bkash</option>
                 <option value="Nagad">Nagad</option>
@@ -318,12 +262,8 @@
               </select>
               <input id="payment-number" type="number" placeholder="Account Number" class="w-full p-3 rounded-lg input-field mb-3 focus:border-accent focus:outline-none transition">
               <button id="withdraw-btn" class="w-full p-3 rounded-lg btn-accent shadow-md">Request Withdrawal</button>
-                
-              <p class="text-xs text-gray-400 mt-4 text-center">
-                Minimum: <span id="dynamic-min-withdraw">5000</span> Coins | Payment within 12-24 Hours
-              </p>
+              <p class="text-xs text-gray-400 mt-4 text-center">Minimum: <span id="dynamic-min-withdraw">5000</span> Coins | Payment within 12-24 Hours</p>
             </div>
-
             <div>
               <h3 class="font-semibold text-gray-300 mb-3 border-b border-gray-700 pb-2">Withdrawal History</h3>
               <div id="withdrawal-history-list" class="space-y-3"></div>
@@ -338,11 +278,8 @@
                 <span id="referral-code" class="text-2xl font-bold tracking-widest text-accent">LOADING...</span>
                 <button id="copy-code-btn" class="ml-4 p-2 hover:bg-gray-800 rounded-full transition"><i data-lucide="copy" class="w-5 h-5 text-gray-400"></i></button>
               </div>
-                
               <button id="share-btn" class="w-full p-3 rounded-lg btn-accent shadow-md">Share With Friends</button>
-              
               <p class="text-sm text-gray-400 mt-4 text-center">প্রতি রেফারে <span class="text-accent font-bold">১০০০ কয়েন</span> বোনাস পাবেন!</p>
-              
               <div class="mt-8 border-t border-gray-700 pt-6">
                 <h3 class="font-bold text-white mb-2 text-sm">Have a Referral Code?</h3>
                 <p class="text-xs text-gray-400 mb-3">If you missed entering a code during signup, you can add it here. (Optional)</p>
@@ -351,17 +288,14 @@
                     <button id="submit-refer-btn" class="p-3 rounded-lg bg-[#1a202c] hover:bg-gray-700 border border-gray-700 hover:border-accent text-white font-bold transition">Submit</button>
                 </div>
               </div>
-
               <div class="mt-6 border-t border-gray-700 pt-6">
                  <h3 class="font-bold text-white mb-3 text-sm flex justify-between items-center">
                     <span>My Referrals</span>
                     <span class="text-accent bg-[#0b0e14] px-2 py-1 rounded border border-gray-700 text-xs">Total: <span id="total-referrals-count">0</span></span>
                  </h3>
-                 <div id="referral-list" class="space-y-2 text-center text-gray-400 text-xs">
-                   Loading...
-                 </div>
+                 <div id="referral-list" class="space-y-2 text-center text-gray-400 text-xs">Loading...</div>
               </div>
-              </div>
+            </div>
           </div>
 
           <div id="profile-page" class="p-4 space-y-6 sub-page text-center">
@@ -372,26 +306,24 @@
               <h2 id="profile-name" class="text-2xl font-bold">Loading...</h2>
               <p id="profile-email" class="text-gray-400 text-sm">...</p>
             </div>
-              
+            
             <div class="card-bg p-4 rounded-lg text-left border border-gray-800">
                 <h3 class="font-semibold mb-3 border-b border-gray-700 pb-2">Account Settings</h3>
-                
                 <label class="text-xs text-gray-400 mb-1 block">Full Name</label>
                 <input id="edit-profile-name" type="text" placeholder="Enter Name" class="w-full p-2 rounded input-field mb-3 text-sm">
-                
-                <label class="text-xs text-gray-400 mb-1 block">New Password (Optional)</label>
-                <input id="edit-profile-pass" type="password" placeholder="Min 6 chars" class="w-full p-2 rounded input-field mb-4 text-sm">
-                
+                <label class="text-xs text-gray-400 mb-1 block">Previous Password</label>
+                <input id="edit-profile-old-pass" type="password" placeholder="Enter current password" class="w-full p-2 rounded input-field mb-3 text-sm">
+                <label class="text-xs text-gray-400 mb-1 block">New Password</label>
+                <input id="edit-profile-new-pass" type="password" placeholder="Min 6 chars" class="w-full p-2 rounded input-field mb-3 text-sm">
+                <label class="text-xs text-gray-400 mb-1 block">Confirm New Password</label>
+                <input id="edit-profile-confirm-pass" type="password" placeholder="Re-type new password" class="w-full p-2 rounded input-field mb-4 text-sm">
                 <button id="save-profile-btn" class="w-full py-2 rounded-lg bg-[#00ff9d] text-black font-bold text-sm hover:bg-[#00d684] transition">Save Changes</button>
             </div>
 
             <div class="card-bg p-4 rounded-lg text-left border border-gray-800">
               <h3 class="font-semibold mb-3 border-b border-gray-700 pb-2">Device Security</h3>
-              <p class="text-sm text-gray-400 mb-1">Current Device/IP:</p>
-              <p id="current-device-info" class="text-xs font-mono p-2 bg-[#0b0e14] rounded text-[#00ff9d] border border-gray-800 break-all"></p>
               <p class="text-xs text-gray-500 mt-2 flex items-center gap-1"><i data-lucide="shield-check" class="w-3 h-3"></i> Protected: Single device policy active</p>
             </div>
-              
             <button id="logout-btn" class="w-full mt-4 p-3 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold transition">Logout</button>
           </div>
         </main>
@@ -428,7 +360,7 @@
     };
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile, sendPasswordResetEmail, updatePassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile, sendPasswordResetEmail, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
     import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc, serverTimestamp, query, where, getDocs, orderBy, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
     const app = initializeApp(firebaseConfig);
@@ -465,15 +397,12 @@
         lucide.createIcons();
     }
 
-    // UPDATED: Added timeout to prevent blocking
     async function getIPAddress() {
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 seconds timeout
-        
+        const timeoutId = setTimeout(() => controller.abort(), 3000); 
         const response = await fetch('https://api.ipify.org?format=json', { signal: controller.signal });
         clearTimeout(timeoutId);
-        
         const data = await response.json();
         return data.ip;
       } catch (error) { 
@@ -556,54 +485,36 @@
       }
     }
 
-    // UPDATED: Initial Load Logic
     window.onload = async () => {
       lucide.createIcons();
       setupEventListeners();
       deviceId = generateDeviceId();
-      // IP check is now non-blocking or fast enough not to freeze UI
       userIP = await getIPAddress(); 
       onAuthStateChanged(auth, handleAuthStateChange);
     };
 
-    // UPDATED: Robust Error Handling & "Try-Catch"
     async function handleAuthStateChange(user) {
       if (user) {
         currentUser = user;
         showLoader(true);
-        
         try {
-            if (!await checkActiveSession()) { 
-                showLoader(false); 
-                return; 
-            }
-            
+            if (!await checkActiveSession()) { showLoader(false); return; }
             await fetchUserData();
             await fetchAppConfig();
             listenForNotifications();
-            
-            if (!await checkDeviceSecurity()) { 
-                showLoader(false); 
-                return; 
-            }
-            
+            if (!await checkDeviceSecurity()) { showLoader(false); return; }
             updateUI();
             showMainPage('app-container');
-            // If we are already on a specific page, keep it, otherwise go home
             if(!document.querySelector('.sub-page.active')) {
                navigateTo('home-page');
             }
-            
             showTelegramModal();
         } catch (error) {
             console.error("Auth Loop Error:", error);
             showAlert("Connection Error. Please try again.");
-            // Optional: Sign out if it's a critical error
-            // await signOut(auth);
         } finally {
-            showLoader(false); // Ensures spinner always stops
+            showLoader(false);
         }
-
       } else {
         await cleanupSession();
         showMainPage('auth-section');
@@ -618,12 +529,10 @@
         document.getElementById('popup-title').textContent = title || "New Notification";
         document.getElementById('popup-message').textContent = message || "";
         document.getElementById('popup-date').textContent = dateStr || "Just Now";
-        
         const card = document.getElementById('popup-card');
         const iconContainer = document.getElementById('popup-icon-container');
         const btn = document.getElementById('popup-btn');
         const icon = document.getElementById('popup-icon');
-
         if(isPrivate) {
             card.classList.remove('border-accent');
             card.classList.add('border-green-500');
@@ -649,36 +558,19 @@
         try {
             const globalRef = collection(db, "global_notifications");
             const qGlobal = query(globalRef, orderBy("createdAt", "desc"));
-            
             let isInitialLoad = true;
-
             onSnapshot(qGlobal, (snapshot) => {
                 const listContainer = document.getElementById("notification-list");
                 const dot = document.getElementById("notification-dot");
-                
-                if (snapshot.empty && listContainer.innerHTML.includes("No new notifications")) {
-                } else if (!snapshot.empty) {
+                if (!snapshot.empty) {
                     if(listContainer.innerHTML.includes("No new notifications")) listContainer.innerHTML = "";
-                    
                     snapshot.forEach(doc => {
                         const data = doc.data();
                         const dateStr = data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString() : "Just now";
-                        
-                        const html = `
-                        <div class="card-bg p-4 rounded-lg border-l-4 border-accent shadow-sm hover:bg-[#252525] transition-colors mb-3">
-                            <div class="flex justify-between items-start mb-1">
-                                <h3 class="font-bold text-white text-sm">${data.title || "New Message"}</h3>
-                                <span class="text-[10px] text-gray-500 bg-black bg-opacity-30 px-2 py-1 rounded-full">${dateStr}</span>
-                            </div>
-                            <p class="text-xs text-gray-300 leading-relaxed">${data.message}</p>
-                        </div>`;
-                        
-                        if(!listContainer.innerHTML.includes(data.message)) {
-                            listContainer.innerHTML += html;
-                        }
+                        const html = `<div class="card-bg p-4 rounded-lg border-l-4 border-accent shadow-sm hover:bg-[#252525] transition-colors mb-3"><div class="flex justify-between items-start mb-1"><h3 class="font-bold text-white text-sm">${data.title || "New Message"}</h3><span class="text-[10px] text-gray-500 bg-black bg-opacity-30 px-2 py-1 rounded-full">${dateStr}</span></div><p class="text-xs text-gray-300 leading-relaxed">${data.message}</p></div>`;
+                        if(!listContainer.innerHTML.includes(data.message)) { listContainer.innerHTML += html; }
                     });
                     lucide.createIcons();
-                    
                     const changes = snapshot.docChanges();
                     changes.forEach(change => {
                         if (change.type === 'added' && !isInitialLoad) {
@@ -690,38 +582,24 @@
                 }
                 isInitialLoad = false;
             });
-
             if(currentUser && currentUser.uid) {
                 const personalRef = collection(db, "users", currentUser.uid, "notifications");
                 const qPersonal = query(personalRef, orderBy("createdAt", "desc"));
                 let isInitialPersonal = true;
-
                 onSnapshot(qPersonal, (snapshot) => {
                     if(!snapshot.empty) {
                         const listContainer = document.getElementById("notification-list");
                         const dot = document.getElementById("notification-dot");
-                        
                         if(listContainer.innerHTML.includes("No new notifications")) listContainer.innerHTML = "";
-
                         const changes = snapshot.docChanges();
                         changes.forEach(change => {
                             if (change.type === 'added') {
                                 const data = change.doc.data();
-                                
                                 if(!isInitialPersonal) {
                                     showNotificationPopup(data.title, data.message, "Just Now", true);
                                     dot.style.display = "block";
                                 }
-
-                                const html = `
-                                <div class="card-bg p-4 rounded-lg border-l-4 border-green-500 shadow-sm hover:bg-[#252525] transition-colors mb-3">
-                                    <div class="flex justify-between items-start mb-1">
-                                        <h3 class="font-bold text-white text-sm">${data.title || "Personal Message"}</h3>
-                                        <span class="text-[10px] text-green-400 bg-green-900 bg-opacity-30 px-2 py-1 rounded-full border border-green-700">Private</span>
-                                    </div>
-                                    <p class="text-xs text-gray-300 leading-relaxed">${data.message}</p>
-                                </div>`;
-                                
+                                const html = `<div class="card-bg p-4 rounded-lg border-l-4 border-green-500 shadow-sm hover:bg-[#252525] transition-colors mb-3"><div class="flex justify-between items-start mb-1"><h3 class="font-bold text-white text-sm">${data.title || "Personal Message"}</h3><span class="text-[10px] text-green-400 bg-green-900 bg-opacity-30 px-2 py-1 rounded-full border border-green-700">Private</span></div><p class="text-xs text-gray-300 leading-relaxed">${data.message}</p></div>`;
                                 listContainer.insertAdjacentHTML('afterbegin', html);
                             }
                         });
@@ -743,8 +621,7 @@
       if (snap.exists()) { 
           userData = snap.data();
           if(!userData.taskCounts) userData.taskCounts = {};
-      } 
-      else {
+      } else {
         const referralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
         userData = {
           uid: currentUser.uid, name: currentUser.displayName || "User", email: currentUser.email, balance: 50, referralCode: referralCode, dailyAdCount: 0, lastAdWatchDate: new Date().toISOString().split('T')[0],
@@ -775,37 +652,28 @@
       document.getElementById('coin-balance').textContent = userData.balance;
       document.getElementById('wallet-coin-balance').textContent = userData.balance;
       document.getElementById('profile-name').textContent = userData.name;
-      document.getElementById('edit-profile-name').value = userData.name; // Set current name in edit field
+      document.getElementById('edit-profile-name').value = userData.name;
       document.getElementById('profile-email').textContent = userData.email;
       document.getElementById('referral-code').textContent = userData.referralCode;
-      
       document.getElementById('dynamic-min-withdraw').textContent = appConfig.minWithdrawal;
       document.getElementById('rate-display').textContent = `Rate: ${appConfig.coinValueCoins} Coins = ${appConfig.coinValueTaka} ৳`;
-
       const methodSelect = document.getElementById('withdraw-method');
       if(appConfig.paymentMethods && appConfig.paymentMethods.length > 0) {
           methodSelect.innerHTML = appConfig.paymentMethods.map(m => `<option value="${m}">${m}</option>`).join('');
       }
-      
-      const deviceInfo = document.getElementById('current-device-info');
-      if (deviceInfo) deviceInfo.textContent = `${deviceId.substring(0, 12)}... | IP: ${userIP}`;
-      
       const today = new Date().toISOString().split('T')[0];
       let count = 0;
       if (userData.lastAdWatchDate === today) {
           count = userData.dailyAdCount || 0;
       }
       const limit = appConfig.dailyAdLimit;
-      
       document.getElementById('task-progress').textContent = count;
       document.getElementById('task-limit').textContent = limit;
-
       const progressBar = document.getElementById('task-progress-bar');
       if(progressBar) {
         const percentage = Math.min((count / limit) * 100, 100);
         progressBar.style.width = `${percentage}%`;
       }
-
       const manualInput = document.getElementById('manual-refer-code');
       const manualBtn = document.getElementById('submit-refer-btn');
       if(userData.referredBy) {
@@ -816,7 +684,8 @@
       }
     }
 
-    function navigateTo(pageId) {
+    // EXPOSE FUNCTION TO WINDOW FOR INLINE HTML ACCESS
+    window.navigateTo = function(pageId) {
       document.querySelectorAll(".sub-page").forEach(p => p.classList.remove("active"));
       document.getElementById(pageId).classList.add("active");
       document.querySelectorAll(".nav-link").forEach(link => {
@@ -833,39 +702,21 @@
         const list = document.getElementById('referral-list');
         const totalCountEl = document.getElementById('total-referrals-count');
         list.innerHTML = '<div class="animate-pulse">Loading...</div>';
-
         try {
             const q = query(collection(db, "users"), where("referredBy", "==", currentUser.uid));
             const snap = await getDocs(q);
-
             if (totalCountEl) totalCountEl.textContent = snap.size;
-
             if (snap.empty) {
                 list.innerHTML = '<p class="text-gray-500">No referrals yet.</p>';
                 return;
             }
-
             list.innerHTML = '';
             snap.forEach(doc => {
                 const data = doc.data();
                 const joinDate = data.registeredDevice && data.registeredDevice.registeredAt 
                     ? new Date(data.registeredDevice.registeredAt.seconds * 1000).toLocaleDateString()
                     : 'Unknown';
-
-                list.innerHTML += `
-                    <div class="bg-gray-800 p-3 rounded-lg flex items-center justify-between shadow-sm">
-                        <div class="flex items-center gap-3">
-                            <div class="bg-gray-700 p-2 rounded-full"><i data-lucide="user" class="w-4 h-4 text-gray-300"></i></div>
-                            <div class="text-left">
-                                <p class="text-sm font-bold text-white">${data.name}</p>
-                                <p class="text-[10px] text-gray-500">Joined: ${joinDate}</p>
-                            </div>
-                        </div>
-                        <span class="text-xs text-green-400 font-bold flex items-center gap-1">
-                            <i data-lucide="check-circle" class="w-3 h-3"></i> Referred
-                        </span>
-                    </div>
-                `;
+                list.innerHTML += `<div class="bg-gray-800 p-3 rounded-lg flex items-center justify-between shadow-sm"><div class="flex items-center gap-3"><div class="bg-gray-700 p-2 rounded-full"><i data-lucide="user" class="w-4 h-4 text-gray-300"></i></div><div class="text-left"><p class="text-sm font-bold text-white">${data.name}</p><p class="text-[10px] text-gray-500">Joined: ${joinDate}</p></div></div><span class="text-xs text-green-400 font-bold flex items-center gap-1"><i data-lucide="check-circle" class="w-3 h-3"></i> Referred</span></div>`;
             });
             lucide.createIcons();
         } catch (e) {
@@ -894,20 +745,16 @@
         showAlert("Please use your registered device to complete tasks.");
         return false;
       }
-
       const today = new Date().toISOString().split('T')[0];
-      
       if (userData.lastAdWatchDate !== today) {
           userData.dailyAdCount = 0;
           userData.taskCounts = {};
       }
-
       const currentTotal = userData.dailyAdCount || 0;
       if (currentTotal >= appConfig.dailyAdLimit) {
         showAlert(`Daily Total Limit (${appConfig.dailyAdLimit}) Reached! Come back tomorrow.`);
         return false;
       }
-
       if (taskId) {
           const taskCounts = userData.taskCounts || {};
           const currentTaskCount = taskCounts[taskId] || 0;
@@ -916,24 +763,21 @@
               return false;
           }
       }
-
       return true;
     }
 
+    // EXPOSE TO WINDOW
     window.visitWebsite = async function(url, seconds, taskId) {
       if (activeTask) {
           showAlert("A task is already running! Please wait.");
           return;
       }
       if (!await validateTask(taskId)) return;
-
       let finalUrl = url;
       if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
           finalUrl = 'https://' + finalUrl;
       }
-
       const taskWindow = window.open(finalUrl, '_blank');
-
       activeTask = {
         url: finalUrl,
         duration: seconds,
@@ -942,40 +786,30 @@
         window: taskWindow,
         isCompleted: false
       };
-
       timerModal.classList.remove('hidden');
       const modalTitle = timerModal.querySelector('h3');
       const modalDesc = timerModal.querySelector('p');
-      
       if(modalTitle) modalTitle.textContent = "Verifying Task...";
       if(modalDesc) modalDesc.textContent = `Please stay on the website. Auto-returning in ${seconds}s...`;
-
       countdownDisplay.textContent = seconds;
-
       activeTask.interval = setInterval(async () => {
         if (!activeTask || activeTask.isCompleted) {
             clearInterval(activeTask ? activeTask.interval : undefined);
             return;
         }
-
         const elapsed = Math.floor((Date.now() - activeTask.startTime) / 1000);
         let timeLeft = activeTask.duration - elapsed;
-
         if (timeLeft <= 0) {
           timeLeft = 0;
           activeTask.isCompleted = true; 
           clearInterval(activeTask.interval);
           countdownDisplay.textContent = "0";
-          
           if (activeTask.window && !activeTask.window.closed) {
               activeTask.window.close();
           }
-
           timerModal.classList.add('hidden');
-          
           const currentTaskId = activeTask.taskId;
           activeTask = null;
-
           await addReward(50, currentTaskId);
         } else {
           countdownDisplay.textContent = timeLeft;
@@ -987,21 +821,17 @@
       if (document.visibilityState === "visible" && activeTask && !activeTask.isCompleted) {
         const currentTime = Date.now();
         const timeSpentInSeconds = (currentTime - activeTask.startTime) / 1000;
-        
         if (timeSpentInSeconds < activeTask.duration) {
           if (activeTask.interval) {
               clearInterval(activeTask.interval);
           }
           timerModal.classList.add('hidden');
-
           const modalTitle = timerModal.querySelector('h3');
           const modalDesc = timerModal.querySelector('p');
           if(modalTitle) modalTitle.textContent = "Please Wait";
           if(modalDesc) modalDesc.textContent = "Do not close the browser or app.";
-
           const requiredTime = activeTask.duration;
           activeTask = null;
-
           showAlert(`❌ Task Failed! You returned too early.\nYou only waited ${Math.floor(timeSpentInSeconds)} seconds.\nPlease stay for the full ${requiredTime} seconds.`);
         }
       }
@@ -1011,46 +841,37 @@
       if (currentUser) {
         try { await updateDoc(doc(db, "active_sessions", currentUser.uid), { lastActive: serverTimestamp() }); } catch (e) {}
       }
-      
       const today = new Date().toISOString().split('T')[0];
       const userRef = doc(db, "users", currentUser.uid);
-      
       if (userData.lastAdWatchDate !== today) {
           userData.dailyAdCount = 0;
           userData.taskCounts = {};
       }
-
       let newTotal = (userData.dailyAdCount || 0) + 1;
       let currentTaskCounts = userData.taskCounts || {};
       if(taskId) {
           currentTaskCounts[taskId] = (currentTaskCounts[taskId] || 0) + 1;
       }
-
       const newBalance = (userData.balance || 0) + reward;
-
       await updateDoc(userRef, { 
           balance: newBalance, 
           dailyAdCount: newTotal,
           taskCounts: currentTaskCounts, 
           lastAdWatchDate: today 
       });
-      
       userData.balance = newBalance;
       userData.dailyAdCount = newTotal;
       userData.taskCounts = currentTaskCounts;
       userData.lastAdWatchDate = today;
-      
       updateUI();
       showAlert(`অভিনন্দন! আপনি ${reward} কয়েন পেয়েছেন।`);
     }
 
+    // EXPOSE TO WINDOW
     window.claimReward = async (type, taskId) => {
       if (!await validateTask(taskId)) return;
-      
       activeTask = { taskId: taskId }; 
-
       if (type === 'dailyClick') return startTimerTask(30, 50);
-      
       if (typeof window.show_10514704 === 'function') {
         showLoader(true);
         try {
@@ -1063,7 +884,6 @@
     async function handlePasswordReset() {
         const email = document.getElementById('reset-email').value.trim();
         if (!email) return showAlert("Please enter your email.");
-
         showLoader(true);
         try {
             await sendPasswordResetEmail(auth, email);
@@ -1082,14 +902,12 @@
       const email = document.getElementById('signup-email').value;
       const pass = document.getElementById('signup-password').value;
       const refCode = document.getElementById('signup-referral').value.trim();
-      
       if (!name || !email || !pass) return showAlert("সবগুলো ঘর পূরণ করুন।");
       showLoader(true);
       try {
         const res = await createUserWithEmailAndPassword(auth, email, pass);
         await updateProfile(res.user, { displayName: name });
         let referredByUid = null;
-        
         if(refCode) {
            const q = query(collection(db, "users"), where("referralCode", "==", refCode));
            const querySnapshot = await getDocs(q);
@@ -1097,17 +915,14 @@
              const referrerDoc = querySnapshot.docs[0];
              const referrerData = referrerDoc.data();
              referredByUid = referrerData.uid;
-
              const currentCount = referrerData.referralCount || 0;
              const reward = 1000;
-             
              await updateDoc(doc(db, "users", referredByUid), { 
                  balance: (referrerData.balance || 0) + reward,
                  referralCount: currentCount + 1
              });
            }
         }
-
         await setDoc(doc(db, "users", res.user.uid), {
           uid: res.user.uid, name: name, email: email, balance: 50, referralCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
           referredBy: referredByUid, dailyAdCount: 0, lastAdWatchDate: new Date().toISOString().split('T')[0],
@@ -1132,32 +947,25 @@
         if(!code) return showAlert("Please enter a code.");
         if(userData.referredBy) return showAlert("You have already been referred by someone.");
         if(code === userData.referralCode) return showAlert("You cannot refer yourself.");
-
         showLoader(true);
         try {
             const q = query(collection(db, "users"), where("referralCode", "==", code));
             const querySnapshot = await getDocs(q);
-             
             if (querySnapshot.empty) {
                 showAlert("Invalid Referral Code.");
             } else {
                 const referrerDoc = querySnapshot.docs[0];
                 const referrerData = referrerDoc.data();
-                
                 const currentCount = referrerData.referralCount || 0;
                 const reward = 1000;
-
                 await updateDoc(doc(db, "users", referrerData.uid), { 
                     balance: (referrerData.balance || 0) + reward,
                     referralCount: currentCount + 1
                 });
-
                 const userRef = doc(db, "users", currentUser.uid);
                 await updateDoc(userRef, { referredBy: referrerData.uid });
-                
                 userData.referredBy = referrerData.uid;
                 updateUI();
-                
                 showAlert(`Success! You have been referred by ${referrerData.name}.`);
                 document.getElementById('manual-refer-code').value = '';
             }
@@ -1174,12 +982,10 @@
       const amount = parseInt(document.getElementById('withdraw-amount').value);
       const method = document.getElementById('withdraw-method').value;
       const number = document.getElementById('payment-number').value;
-
       if (!amount || amount <= 0) return showAlert("Please enter valid amount");
       if (amount < appConfig.minWithdrawal) return showAlert(`সর্বনিম্ন ${appConfig.minWithdrawal} কয়েন লাগবে।`);
       if (amount > userData.balance) return showAlert("আপনার ব্যালেন্স কম।");
       if (!number) return showAlert("নম্বর লিখুন।");
-
       showLoader(true);
       try {
         await addDoc(collection(db, "withdrawals"), {
@@ -1191,7 +997,6 @@
         userData.balance = newBalance;
         updateUI();
         showAlert("অনুরোধ পাঠানো হয়েছে!");
-        
         document.getElementById('withdraw-amount').value = '';
         document.getElementById('payment-number').value = '';
         document.getElementById('conversion-preview').textContent = '';
@@ -1199,45 +1004,40 @@
       showLoader(false);
     }
 
-    // NEW: Handle Profile Update
     async function handleProfileUpdate() {
         const newName = document.getElementById('edit-profile-name').value;
-        const newPass = document.getElementById('edit-profile-pass').value;
-
+        const oldPass = document.getElementById('edit-profile-old-pass').value;
+        const newPass = document.getElementById('edit-profile-new-pass').value;
+        const confirmPass = document.getElementById('edit-profile-confirm-pass').value;
         if (!newName) {
             showAlert("Name cannot be empty.");
             return;
         }
-
         showLoader(true);
         try {
-            // Update Name
             if (newName !== currentUser.displayName) {
                 await updateProfile(currentUser, { displayName: newName });
                 await updateDoc(doc(db, "users", currentUser.uid), { name: newName });
                 userData.name = newName;
             }
-
-            // Update Password
-            if (newPass && newPass.length >= 6) {
+            if (newPass || oldPass || confirmPass) {
+                if (!oldPass) throw new Error("Please enter your previous password.");
+                if (newPass.length < 6) throw new Error("New password must be at least 6 characters.");
+                if (newPass !== confirmPass) throw new Error("New passwords do not match.");
+                const credential = EmailAuthProvider.credential(currentUser.email, oldPass);
+                await reauthenticateWithCredential(currentUser, credential);
                 await updatePassword(currentUser, newPass);
-                showAlert("Profile and Password updated!");
-            } else if (newPass && newPass.length < 6) {
-                showAlert("Password must be at least 6 characters.");
+                showAlert("Profile and Password updated successfully!");
+                document.getElementById('edit-profile-old-pass').value = '';
+                document.getElementById('edit-profile-new-pass').value = '';
+                document.getElementById('edit-profile-confirm-pass').value = '';
             } else {
-                showAlert("Profile Updated!");
+                showAlert("Profile Name Updated!");
             }
-            
             updateUI();
-            document.getElementById('edit-profile-pass').value = ''; // Clear password field
-            
         } catch (error) {
             console.error(error);
-            if (error.code === 'auth/requires-recent-login') {
-                showAlert("Security Alert: Please Logout and Login again to change password.");
-            } else {
-                showAlert("Update Failed: " + error.message);
-            }
+            showAlert("Update Failed: " + error.message);
         }
         showLoader(false);
     }
@@ -1253,39 +1053,28 @@
         }
     });
 
-    // --- REAL-TIME PERMANENT WITHDRAWAL HISTORY BOX ---
     function loadWithdrawalHistory() {
       const list = document.getElementById('withdrawal-history-list');
-      
       if (withdrawalListener) {
         withdrawalListener();
       }
-
-      // Querying all history permanently (No limits)
       const q = query(collection(db, "withdrawals"), where("userId", "==", currentUser.uid), orderBy("createdAt", "desc"));
-      
       withdrawalListener = onSnapshot(q, (snap) => {
         list.innerHTML = "";
-        
         if (snap.empty) {
             list.innerHTML = '<div class="card-bg p-4 rounded-lg text-center text-gray-500 text-xs border border-gray-700">No payment history found.</div>';
             return;
         }
-
         snap.forEach(d => {
             const data = d.data();
-            
             let dateStr = 'Just Now';
             if(data.createdAt) {
                dateStr = new Date(data.createdAt.seconds * 1000).toLocaleString('en-US', {
                   month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
                });
             }
-            
             let statusHtml = '';
             let borderColor = '';
-
-            // EXACT LOGIC TO UPDATE PENDING TO APPROVED FOREVER
             if (data.status === 'approved') {
                 statusHtml = '<span class="text-green-400 font-bold text-[10px] bg-green-900 bg-opacity-40 px-2 py-1 rounded border border-green-700 flex items-center gap-1"><i data-lucide="check-circle" class="w-3 h-3"></i> Approved</span>';
                 borderColor = 'border-green-500';
@@ -1296,32 +1085,18 @@
                 statusHtml = '<span class="text-yellow-400 font-bold text-[10px] bg-yellow-900 bg-opacity-40 px-2 py-1 rounded border border-yellow-700 flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> Pending</span>';
                 borderColor = 'border-yellow-500';
             }
-
-            const html = `
-              <div class="card-bg p-3 rounded-lg flex flex-col gap-2 shadow-sm border-l-4 ${borderColor} transition-all duration-300">
-                <div class="flex justify-between items-center">
-                   <span class="font-bold text-sm text-white">${data.amount} Coins</span>
-                   ${statusHtml}
-                </div>
-                <div class="flex justify-between items-center text-[10px] text-gray-400 mt-1">
-                   <span>${data.method} - ${data.number}</span>
-                   <span>${dateStr}</span>
-                </div>
-              </div>`;
+            const html = `<div class="card-bg p-3 rounded-lg flex flex-col gap-2 shadow-sm border-l-4 ${borderColor} transition-all duration-300"><div class="flex justify-between items-center"><span class="font-bold text-sm text-white">${data.amount} Coins</span>${statusHtml}</div><div class="flex justify-between items-center text-[10px] text-gray-400 mt-1"><span>${data.method} - ${data.number}</span><span>${dateStr}</span></div></div>`;
             list.innerHTML += html;
         });
-        
-        lucide.createIcons(); // Instantly update the icons inside the history
+        lucide.createIcons(); 
       });
     }
 
     async function handleShare() {
       if (!userData || !userData.referralCode) return showAlert("Loading...");
-
       const botUsername = "easyaddsearnig_bot";
       const link = `https://t.me/${botUsername}?start=${userData.referralCode}`;
       const message = `${link}\nCode: ${userData.referralCode}`;
-
       if (navigator.share) {
         try {
           await navigator.share({ title: 'Join Now', text: message });
@@ -1340,9 +1115,8 @@
       document.getElementById('logout-btn').onclick = async () => { await cleanupSession(); await signOut(auth); };
       document.getElementById('withdraw-btn').onclick = handleWithdrawal;
       document.getElementById('copy-code-btn').onclick = () => { navigator.clipboard.writeText(userData.referralCode); showAlert("কোড কপি হয়েছে!"); };
-      document.querySelectorAll('.nav-link').forEach(l => { l.onclick = (e) => { e.preventDefault(); navigateTo(l.dataset.page); }; });
-      document.getElementById('notification-bell').onclick = () => { navigateTo('notification-page'); };
-      
+      document.querySelectorAll('.nav-link').forEach(l => { l.onclick = (e) => { e.preventDefault(); window.navigateTo(l.dataset.page); }; });
+      document.getElementById('notification-bell').onclick = () => { window.navigateTo('notification-page'); };
       document.getElementById('show-signup').onclick = () => { 
           document.getElementById('login-view').classList.add('hidden'); 
           document.getElementById('signup-view').classList.remove('hidden'); 
@@ -1353,25 +1127,20 @@
           document.getElementById('login-view').classList.remove('hidden'); 
           document.getElementById('forgot-pass-view').classList.add('hidden');
       };
-      
       document.getElementById('show-forgot-pass').onclick = () => {
           document.getElementById('login-view').classList.add('hidden');
           document.getElementById('forgot-pass-view').classList.remove('hidden');
       };
-      
       document.getElementById('back-to-login').onclick = (e) => {
           e.preventDefault();
           document.getElementById('forgot-pass-view').classList.add('hidden');
           document.getElementById('login-view').classList.remove('hidden');
       };
-      
       document.getElementById('reset-pass-btn').onclick = handlePasswordReset;
       document.getElementById('submit-refer-btn').onclick = handleManualReferral;
       document.getElementById('share-btn').onclick = handleShare;
       document.getElementById('save-profile-btn').onclick = handleProfileUpdate; 
-
-      // FIXED HEADER PROFILE CLICK LISTENER
-      document.getElementById('header-profile-btn').onclick = () => navigateTo('profile-page');
+      document.getElementById('header-profile-btn').onclick = () => window.navigateTo('profile-page');
     }
 
     function showMainPage(id) {
