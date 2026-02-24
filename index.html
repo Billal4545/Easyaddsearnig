@@ -173,9 +173,11 @@
               <i data-lucide="bell" class="w-6 h-6 text-gray-300"></i>
               <div id="notification-dot" class="notification-dot"></div>
             </div>
-            <div class="p-2 hover:bg-gray-800 rounded-full transition" onclick="navigateTo('profile-page')">
-                <i data-lucide="user" class="w-6 h-6 text-gray-300 cursor-pointer"></i>
+            
+            <div class="p-2 hover:bg-gray-800 rounded-full transition cursor-pointer" onclick="navigateTo('profile-page')">
+                <i data-lucide="user" class="w-6 h-6 text-gray-300"></i>
             </div>
+
           </div>
         </header>
 
@@ -372,6 +374,18 @@
             </div>
               
             <div class="card-bg p-4 rounded-lg text-left border border-gray-800">
+                <h3 class="font-semibold mb-3 border-b border-gray-700 pb-2">Account Settings</h3>
+                
+                <label class="text-xs text-gray-400 mb-1 block">Full Name</label>
+                <input id="edit-profile-name" type="text" placeholder="Enter Name" class="w-full p-2 rounded input-field mb-3 text-sm">
+                
+                <label class="text-xs text-gray-400 mb-1 block">New Password (Optional)</label>
+                <input id="edit-profile-pass" type="password" placeholder="Min 6 chars" class="w-full p-2 rounded input-field mb-4 text-sm">
+                
+                <button id="save-profile-btn" class="w-full py-2 rounded-lg bg-[#00ff9d] text-black font-bold text-sm hover:bg-[#00d684] transition">Save Changes</button>
+            </div>
+
+            <div class="card-bg p-4 rounded-lg text-left border border-gray-800">
               <h3 class="font-semibold mb-3 border-b border-gray-700 pb-2">Device Security</h3>
               <p class="text-sm text-gray-400 mb-1">Current Device/IP:</p>
               <p id="current-device-info" class="text-xs font-mono p-2 bg-[#0b0e14] rounded text-[#00ff9d] border border-gray-800 break-all"></p>
@@ -414,7 +428,7 @@
     };
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile, sendPasswordResetEmail, updatePassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
     import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc, serverTimestamp, query, where, getDocs, orderBy, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
     const app = initializeApp(firebaseConfig);
@@ -575,7 +589,10 @@
             
             updateUI();
             showMainPage('app-container');
-            navigateTo('home-page');
+            // If we are already on a specific page, keep it, otherwise go home
+            if(!document.querySelector('.sub-page.active')) {
+               navigateTo('home-page');
+            }
             
             showTelegramModal();
         } catch (error) {
@@ -758,6 +775,7 @@
       document.getElementById('coin-balance').textContent = userData.balance;
       document.getElementById('wallet-coin-balance').textContent = userData.balance;
       document.getElementById('profile-name').textContent = userData.name;
+      document.getElementById('edit-profile-name').value = userData.name; // Set current name in edit field
       document.getElementById('profile-email').textContent = userData.email;
       document.getElementById('referral-code').textContent = userData.referralCode;
       
@@ -1181,6 +1199,49 @@
       showLoader(false);
     }
 
+    // NEW: Handle Profile Update
+    async function handleProfileUpdate() {
+        const newName = document.getElementById('edit-profile-name').value;
+        const newPass = document.getElementById('edit-profile-pass').value;
+
+        if (!newName) {
+            showAlert("Name cannot be empty.");
+            return;
+        }
+
+        showLoader(true);
+        try {
+            // Update Name
+            if (newName !== currentUser.displayName) {
+                await updateProfile(currentUser, { displayName: newName });
+                await updateDoc(doc(db, "users", currentUser.uid), { name: newName });
+                userData.name = newName;
+            }
+
+            // Update Password
+            if (newPass && newPass.length >= 6) {
+                await updatePassword(currentUser, newPass);
+                showAlert("Profile and Password updated!");
+            } else if (newPass && newPass.length < 6) {
+                showAlert("Password must be at least 6 characters.");
+            } else {
+                showAlert("Profile Updated!");
+            }
+            
+            updateUI();
+            document.getElementById('edit-profile-pass').value = ''; // Clear password field
+            
+        } catch (error) {
+            console.error(error);
+            if (error.code === 'auth/requires-recent-login') {
+                showAlert("Security Alert: Please Logout and Login again to change password.");
+            } else {
+                showAlert("Update Failed: " + error.message);
+            }
+        }
+        showLoader(false);
+    }
+
     document.getElementById('withdraw-amount').addEventListener('input', (e) => {
         const amount = parseInt(e.target.value) || 0;
         const preview = document.getElementById('conversion-preview');
@@ -1307,6 +1368,7 @@
       document.getElementById('reset-pass-btn').onclick = handlePasswordReset;
       document.getElementById('submit-refer-btn').onclick = handleManualReferral;
       document.getElementById('share-btn').onclick = handleShare;
+      document.getElementById('save-profile-btn').onclick = handleProfileUpdate; // BIND NEW BUTTON
     }
 
     function showMainPage(id) {
