@@ -42,7 +42,8 @@
   </style>
 </head>
 
-<body class="bg-[#0b0e14]"> <div class="app-wrapper flex flex-col shadow-2xl">
+<body class="bg-[#0b0e14]"> 
+  <div class="app-wrapper flex flex-col shadow-2xl">
       
       <div id="telegram-modal" class="hidden fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-[110] p-6 backdrop-blur-sm">
         <div class="bg-gray-800 rounded-xl p-6 w-full max-w-sm text-center border-2 border-[#0088cc] shadow-[0_0_30px_rgba(0,136,204,0.3)] relative popup-animation">
@@ -522,7 +523,6 @@
             updateUI();
             showMainPage('app-container');
             if(!document.querySelector('.sub-page.active')) {
-               // DO NOT navigate here if already on page, to avoid loops
                window.navigateTo('home-page');
             }
             showTelegramModal();
@@ -765,19 +765,38 @@
         }
     }
 
+    // --- FIXED START TIMER TASK ---
     function startTimerTask(seconds, reward) {
       timerModal.classList.remove('hidden');
       let timeLeft = seconds;
       countdownDisplay.textContent = timeLeft;
+      
+      // Clear previous interval if any
+      if (activeTask && activeTask.interval) {
+          clearInterval(activeTask.interval);
+      }
+
       const interval = setInterval(async () => {
         timeLeft--;
         countdownDisplay.textContent = timeLeft;
         if (timeLeft <= 0) {
           clearInterval(interval);
           timerModal.classList.add('hidden');
-          await addReward(reward, activeTask ? activeTask.taskId : null);
+          
+          // Secure the ID
+          const currentTaskId = activeTask ? activeTask.taskId : null;
+          
+          // FIX: Reset task before reward to unlock
+          activeTask = null;
+
+          await addReward(reward, currentTaskId);
         }
       }, 1000);
+
+      // Store interval
+      if(activeTask) {
+          activeTask.interval = interval;
+      }
     }
 
     async function validateTask(taskId) {
@@ -806,7 +825,7 @@
       return true;
     }
 
-    // EXPOSE TO WINDOW
+    // --- FIXED VISIT WEBSITE ---
     window.visitWebsite = async function(url, seconds, taskId) {
       if (activeTask) {
           showAlert("A task is already running! Please wait.");
@@ -818,6 +837,7 @@
           finalUrl = 'https://' + finalUrl;
       }
       const taskWindow = window.open(finalUrl, '_blank');
+      
       activeTask = {
         url: finalUrl,
         duration: seconds,
@@ -826,12 +846,14 @@
         window: taskWindow,
         isCompleted: false
       };
+
       timerModal.classList.remove('hidden');
       const modalTitle = timerModal.querySelector('h3');
       const modalDesc = timerModal.querySelector('p');
       if(modalTitle) modalTitle.textContent = "Verifying Task...";
       if(modalDesc) modalDesc.textContent = `Please stay on the website. Auto-returning in ${seconds}s...`;
       countdownDisplay.textContent = seconds;
+
       activeTask.interval = setInterval(async () => {
         if (!activeTask || activeTask.isCompleted) {
             clearInterval(activeTask ? activeTask.interval : undefined);
@@ -839,6 +861,7 @@
         }
         const elapsed = Math.floor((Date.now() - activeTask.startTime) / 1000);
         let timeLeft = activeTask.duration - elapsed;
+        
         if (timeLeft <= 0) {
           timeLeft = 0;
           activeTask.isCompleted = true; 
@@ -848,7 +871,9 @@
               activeTask.window.close();
           }
           timerModal.classList.add('hidden');
+          
           const currentTaskId = activeTask.taskId;
+          // FIX: Reset Task
           activeTask = null;
           await addReward(50, currentTaskId);
         } else {
@@ -859,20 +884,27 @@
 
     document.addEventListener("visibilitychange", async () => {
       if (document.visibilityState === "visible" && activeTask && !activeTask.isCompleted) {
-        const currentTime = Date.now();
-        const timeSpentInSeconds = (currentTime - activeTask.startTime) / 1000;
-        if (timeSpentInSeconds < activeTask.duration) {
-          if (activeTask.interval) {
-              clearInterval(activeTask.interval);
-          }
-          timerModal.classList.add('hidden');
-          const modalTitle = timerModal.querySelector('h3');
-          const modalDesc = timerModal.querySelector('p');
-          if(modalTitle) modalTitle.textContent = "Please Wait";
-          if(modalDesc) modalDesc.textContent = "Do not close the browser or app.";
-          const requiredTime = activeTask.duration;
-          activeTask = null;
-          showAlert(`❌ Task Failed! You returned too early.\nYou only waited ${Math.floor(timeSpentInSeconds)} seconds.\nPlease stay for the full ${requiredTime} seconds.`);
+        // If it's a website visit task
+        if (activeTask.window) {
+            const currentTime = Date.now();
+            const timeSpentInSeconds = (currentTime - activeTask.startTime) / 1000;
+            if (timeSpentInSeconds < activeTask.duration) {
+                if (activeTask.interval) {
+                    clearInterval(activeTask.interval);
+                }
+                timerModal.classList.add('hidden');
+                
+                // Reset UI
+                const modalTitle = timerModal.querySelector('h3');
+                const modalDesc = timerModal.querySelector('p');
+                if(modalTitle) modalTitle.textContent = "Please Wait";
+                if(modalDesc) modalDesc.textContent = "Do not close the browser or app.";
+                
+                const requiredTime = activeTask.duration;
+                // FIX: Reset task on failure
+                activeTask = null;
+                showAlert(`❌ Task Failed! You returned too early.\nYou only waited ${Math.floor(timeSpentInSeconds)} seconds.\nPlease stay for the full ${requiredTime} seconds.`);
+            }
         }
       }
     });
@@ -907,17 +939,31 @@
       showAlert(`অভিনন্দন! আপনি ${reward} কয়েন পেয়েছেন।`);
     }
 
-    // EXPOSE TO WINDOW
+    // --- FIXED CLAIM REWARD ---
     window.claimReward = async (type, taskId) => {
       if (!await validateTask(taskId)) return;
-      activeTask = { taskId: taskId }; 
+      
+      // Mark task started
+      activeTask = { taskId: taskId, startTime: Date.now() }; 
+
       if (type === 'dailyClick') return startTimerTask(30, 50);
+
       if (typeof window.show_10514704 === 'function') {
         showLoader(true);
         try {
           await window.show_10514704();
           await addReward(type === 'miniApp' ? 100 : 50, taskId);
-        } catch (e) { showAlert("অ্যাড লোড করতে সমস্যা হয়েছে।"); } finally { showLoader(false); }
+        } catch (e) { 
+            console.error(e);
+            showAlert("অ্যাড লোড করতে সমস্যা হয়েছে।"); 
+        } finally { 
+            showLoader(false); 
+            // FIX: Reset task in finally block
+            activeTask = null;
+        }
+      } else {
+         activeTask = null;
+         showAlert("Ad network not ready.");
       }
     };
 
