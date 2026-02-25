@@ -247,22 +247,32 @@
           <div id="wallet-page" class="p-4 space-y-6 sub-page">
             <h2 class="text-xl font-bold text-center">My Wallet</h2>
             <div class="card-bg p-4 rounded-lg shadow-lg border border-gray-800">
-              <p class="text-sm text-gray-400 mb-1">Available Balance:</p>
-              <p class="text-3xl font-bold text-accent mb-2"><span id="wallet-coin-balance">0</span> Coins</p>
-              <div class="text-xs bg-[#0b0e14] text-gray-300 p-2 rounded mb-4 flex items-center justify-center gap-2 border border-gray-800">
-                 <i data-lucide="info" class="w-3 h-3 text-accent"></i>
-                 <span id="rate-display">Loading Rate...</span>
+              
+              <div id="withdrawal-restricted-msg" class="hidden bg-red-900/30 border border-red-500 rounded p-4 mb-4 text-center">
+                  <p class="text-red-400 text-sm font-bold flex items-center justify-center gap-2">
+                      <i data-lucide="lock" class="w-4 h-4"></i> Withdrawals Disabled
+                  </p>
+                  <p class="text-gray-400 text-xs mt-1">Payments are currently restricted for new accounts.</p>
               </div>
-              <input id="withdraw-amount" type="number" placeholder="Enter coin amount" class="w-full p-3 rounded-lg input-field mb-2 focus:border-accent focus:outline-none transition">
-              <p class="text-xs text-[#00ff9d] text-right mb-3 h-4" id="conversion-preview"></p>
-              <select id="withdraw-method" class="w-full p-3 rounded-lg input-field mb-3 focus:border-accent focus:outline-none transition">
-                <option value="Bkash">Bkash</option>
-                <option value="Nagad">Nagad</option>
-                <option value="Rocket">Rocket</option>
-              </select>
-              <input id="payment-number" type="number" placeholder="Account Number" class="w-full p-3 rounded-lg input-field mb-3 focus:border-accent focus:outline-none transition">
-              <button id="withdraw-btn" class="w-full p-3 rounded-lg btn-accent shadow-md">Request Withdrawal</button>
-              <p class="text-xs text-gray-400 mt-4 text-center">Minimum: <span id="dynamic-min-withdraw">5000</span> Coins | Payment within 12-24 Hours</p>
+
+              <div id="wallet-content-area">
+                  <p class="text-sm text-gray-400 mb-1">Available Balance:</p>
+                  <p class="text-3xl font-bold text-accent mb-2"><span id="wallet-coin-balance">0</span> Coins</p>
+                  <div class="text-xs bg-[#0b0e14] text-gray-300 p-2 rounded mb-4 flex items-center justify-center gap-2 border border-gray-800">
+                     <i data-lucide="info" class="w-3 h-3 text-accent"></i>
+                     <span id="rate-display">Loading Rate...</span>
+                  </div>
+                  <input id="withdraw-amount" type="number" placeholder="Enter coin amount" class="w-full p-3 rounded-lg input-field mb-2 focus:border-accent focus:outline-none transition">
+                  <p class="text-xs text-[#00ff9d] text-right mb-3 h-4" id="conversion-preview"></p>
+                  <select id="withdraw-method" class="w-full p-3 rounded-lg input-field mb-3 focus:border-accent focus:outline-none transition">
+                    <option value="Bkash">Bkash</option>
+                    <option value="Nagad">Nagad</option>
+                    <option value="Rocket">Rocket</option>
+                  </select>
+                  <input id="payment-number" type="number" placeholder="Account Number" class="w-full p-3 rounded-lg input-field mb-3 focus:border-accent focus:outline-none transition">
+                  <button id="withdraw-btn" class="w-full p-3 rounded-lg btn-accent shadow-md">Request Withdrawal</button>
+                  <p class="text-xs text-gray-400 mt-4 text-center">Minimum: <span id="dynamic-min-withdraw">5000</span> Coins | Payment within 12-24 Hours</p>
+              </div>
             </div>
             <div>
               <h3 class="font-semibold text-gray-300 mb-3 border-b border-gray-700 pb-2">Withdrawal History</h3>
@@ -377,11 +387,15 @@
         dailyAdLimit: 25,
         coinValueCoins: 1000,
         coinValueTaka: 10,
-        paymentMethods: ['Bkash', 'Nagad', 'Rocket']
+        paymentMethods: ['Bkash', 'Nagad', 'Rocket'],
+        restrictNewUsers: false // Default
     };
     let userIP = 'unknown'; // Default value
     let deviceId = null;
     let withdrawalListener = null;
+
+    // DATE CUTOFF FOR NEW USERS (Feb 24, 2026)
+    const CUTOFF_TIMESTAMP = 1771891200000; 
 
     const loader = document.getElementById('loader');
     const timerModal = document.getElementById('timer-modal');
@@ -506,7 +520,8 @@
             updateUI();
             showMainPage('app-container');
             if(!document.querySelector('.sub-page.active')) {
-               navigateTo('home-page');
+               // DO NOT navigate here if already on page, to avoid loops
+               window.navigateTo('home-page');
             }
             showTelegramModal();
         } catch (error) {
@@ -642,6 +657,8 @@
               if(!appConfig.coinValueCoins) appConfig.coinValueCoins = 1000;
               if(!appConfig.coinValueTaka) appConfig.coinValueTaka = 10;
               if(!appConfig.paymentMethods) appConfig.paymentMethods = ['Bkash', 'Nagad', 'Rocket'];
+              // IMPORTANT: Get restriction setting
+              if(typeof appConfig.restrictNewUsers === 'undefined') appConfig.restrictNewUsers = false;
           }
       } catch(e) { console.warn("Config load failed, using defaults"); }
       updateUI();
@@ -661,6 +678,7 @@
       if(appConfig.paymentMethods && appConfig.paymentMethods.length > 0) {
           methodSelect.innerHTML = appConfig.paymentMethods.map(m => `<option value="${m}">${m}</option>`).join('');
       }
+      
       const today = new Date().toISOString().split('T')[0];
       let count = 0;
       if (userData.lastAdWatchDate === today) {
@@ -681,6 +699,26 @@
          manualInput.disabled = true;
          manualBtn.disabled = true;
          manualBtn.classList.add('opacity-50', 'cursor-not-allowed');
+      }
+
+      // NEW: Check for New User Restriction
+      const walletContent = document.getElementById('wallet-content-area');
+      const restrictedMsg = document.getElementById('withdrawal-restricted-msg');
+      
+      let isRestricted = false;
+      if (appConfig.restrictNewUsers && userData.registeredDevice && userData.registeredDevice.registeredAt) {
+          const regTime = userData.registeredDevice.registeredAt.seconds * 1000;
+          if (regTime > CUTOFF_TIMESTAMP) {
+              isRestricted = true;
+          }
+      }
+
+      if (isRestricted) {
+          walletContent.classList.add('hidden');
+          restrictedMsg.classList.remove('hidden');
+      } else {
+          walletContent.classList.remove('hidden');
+          restrictedMsg.classList.add('hidden');
       }
     }
 
@@ -979,6 +1017,15 @@
       if (userData.registeredDevice && userData.registeredDevice.deviceId !== deviceId) {
         return showAlert("Withdrawal is only allowed from your registered device.");
       }
+      
+      // NEW: Double check restriction before processing
+      if (appConfig.restrictNewUsers && userData.registeredDevice && userData.registeredDevice.registeredAt) {
+          const regTime = userData.registeredDevice.registeredAt.seconds * 1000;
+          if (regTime > CUTOFF_TIMESTAMP) {
+              return showAlert("Withdrawals are disabled for new accounts.");
+          }
+      }
+
       const amount = parseInt(document.getElementById('withdraw-amount').value);
       const method = document.getElementById('withdraw-method').value;
       const number = document.getElementById('payment-number').value;
