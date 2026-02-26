@@ -150,7 +150,7 @@
                         <p class="text-xs text-gray-400">Status</p>
                     </div>
                     <div class="text-right">
-                        <p class="text-2xl font-bold text-accent"><span id="task-progress">0</span>/<span id="task-limit">25</span></p>
+                        <p class="text-2xl font-bold text-accent"><span id="task-progress">0</span>/<span id="task-limit">30</span></p>
                         <p class="text-[10px] text-gray-500">Completed</p>
                     </div>
                 </div>
@@ -168,7 +168,7 @@
                     <span class="text-3xl">🤩</span>
                     <div>
                       <h3 class="font-bold">Watch Video Ad</h3>
-                      <p class="text-xs font-medium">Instant Reward (Limit 5)</p>
+                      <p class="text-xs font-medium">Instant Reward (Limit 6)</p>
                     </div>
                   </div>
                   <button class="bg-[#161b22] text-[#00ff9d] font-bold px-6 py-2 rounded-lg text-sm btn" onclick="claimReward('interstitial', 'task_video')">Claim</button>
@@ -179,7 +179,7 @@
                     <span class="text-3xl">🌐</span>
                     <div>
                       <h3 class="font-semibold text-white">Website Visit 1</h3>
-                      <p class="text-xs text-gray-400">Wait 20 Seconds (Limit 5)</p>
+                      <p class="text-xs text-gray-400">Wait 20 Seconds (Limit 6)</p>
                     </div>
                   </div>
                   <button class="bg-[#00ff9d] text-black font-bold px-6 py-2 rounded-lg text-sm btn" onclick="visitWebsite('earnigpost1.blogspot.com', 20, 'task_visit1')">Visit</button>
@@ -190,7 +190,7 @@
                       <span class="text-3xl">🌐</span>
                       <div>
                         <h3 class="font-semibold text-white">Website Visit 2</h3>
-                        <p class="text-xs text-gray-400">Wait 20 Seconds (Limit 5)</p>
+                        <p class="text-xs text-gray-400">Wait 20 Seconds (Limit 6)</p>
                       </div>
                     </div>
                     <button class="bg-[#00ff9d] text-black font-bold px-6 py-2 rounded-lg text-sm btn" onclick="visitWebsite('earningblog3.blogspot.com', 20, 'task_visit2')">Visit</button>
@@ -201,7 +201,7 @@
                       <span class="text-3xl">🌐</span>
                       <div>
                         <h3 class="font-semibold text-white">Website Visit 3</h3>
-                        <p class="text-xs text-gray-400">Wait 20 Seconds (Limit 5)</p>
+                        <p class="text-xs text-gray-400">Wait 20 Seconds (Limit 6)</p>
                       </div>
                     </div>
                     <button class="bg-[#00ff9d] text-black font-bold px-6 py-2 rounded-lg text-sm btn" onclick="visitWebsite('earningpost4.blogspot.com', 20, 'task_visit3')">Visit</button>
@@ -212,7 +212,7 @@
                       <span class="text-3xl">🌐</span>
                       <div>
                         <h3 class="font-semibold text-white">Website Visit 4</h3>
-                        <p class="text-xs text-gray-400">Wait 20 Seconds (Limit 5)</p>
+                        <p class="text-xs text-gray-400">Wait 20 Seconds (Limit 6)</p>
                       </div>
                     </div>
                     <button class="bg-[#00ff9d] text-black font-bold px-6 py-2 rounded-lg text-sm btn" onclick="visitWebsite('earningpost5.blogspot.com', 20, 'task_special')">Visit</button>
@@ -377,13 +377,13 @@
     // CONFIG
     let appConfig = { 
         minWithdrawal: 5000, 
-        dailyAdLimit: 25,
+        dailyAdLimit: 30, // UPDATED: Changed from 25 to 30 to support 6 tasks x 5 types
         coinValueCoins: 1000,
         coinValueTaka: 10,
         paymentMethods: ['Bkash', 'Nagad', 'Rocket'],
-        restrictNewUsers: false // Default
+        restrictNewUsers: false 
     };
-    let userIP = 'unknown'; // Default value
+    let userIP = 'unknown'; 
     let deviceId = null;
     let withdrawalListener = null;
 
@@ -645,7 +645,7 @@
           if (snap.exists()) {
               appConfig = snap.data();
               if(!appConfig.minWithdrawal) appConfig.minWithdrawal = 5000;
-              if(!appConfig.dailyAdLimit) appConfig.dailyAdLimit = 25; 
+              if(!appConfig.dailyAdLimit) appConfig.dailyAdLimit = 30; // UPDATED: Default to 30
               if(!appConfig.coinValueCoins) appConfig.coinValueCoins = 1000;
               if(!appConfig.coinValueTaka) appConfig.coinValueTaka = 10;
               if(!appConfig.paymentMethods) appConfig.paymentMethods = ['Bkash', 'Nagad', 'Rocket'];
@@ -807,8 +807,9 @@
       if (taskId) {
           const taskCounts = userData.taskCounts || {};
           const currentTaskCount = taskCounts[taskId] || 0;
-          if (currentTaskCount >= 5) {
-              showAlert("Daily limit (5) reached for this specific task!");
+          // UPDATED: Limit 6
+          if (currentTaskCount >= 6) {
+              showAlert("Daily limit (6) reached for this specific task!");
               return false;
           }
       }
