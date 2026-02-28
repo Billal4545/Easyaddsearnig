@@ -193,7 +193,7 @@
                         <p class="text-xs text-gray-400">Wait 20 Seconds (Limit 6)</p>
                       </div>
                     </div>
-                    <button class="bg-[#00ff9d] text-black font-bold px-6 py-2 rounded-lg text-sm btn" onclick="visitWebsite('earningblog3.blogspot.com', 20, 'task_visit2')">Visit</button>
+                    <button class="bg-[#00ff9d] text-black font-bold px-6 py-2 rounded-lg text-sm btn" onclick="visitWebsite('YOUR_NEW_LINK_HERE.com', 20, 'task_visit2')">Visit</button>
                   </div>
         
                   <div class="card-bg p-3 rounded-lg flex items-center justify-between transform active:scale-95 transition border border-gray-800">
@@ -377,7 +377,7 @@
     // CONFIG
     let appConfig = { 
         minWithdrawal: 5000, 
-        dailyAdLimit: 30, // UPDATED: Changed from 25 to 30 to support 6 tasks x 5 types
+        dailyAdLimit: 30, 
         coinValueCoins: 1000,
         coinValueTaka: 10,
         paymentMethods: ['Bkash', 'Nagad', 'Rocket'],
@@ -387,7 +387,7 @@
     let deviceId = null;
     let withdrawalListener = null;
 
-    // DATE CUTOFF FOR NEW USERS (Feb 24, 2026)
+    // DATE CUTOFF FOR NEW USERS
     const CUTOFF_TIMESTAMP = 1771891200000; 
 
     const loader = document.getElementById('loader');
@@ -954,7 +954,8 @@
         }
       } else {
          activeTask = null;
-         showAlert("Ad network not ready.");
+         // NEW ALERT MESSAGE
+         showAlert("অ্যাড লোড হচ্ছে না! দয়া করে আপনার ব্রাউজারের Ad-Blocker/Brave shield অথবা VPN বন্ধ করুন এবং পেজটি রিফ্রেশ করে আবার চেষ্টা করুন।");
       }
     };
 
