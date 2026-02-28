@@ -39,6 +39,9 @@
     @keyframes pulse { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
     .tg-pulse { animation: pulse-blue 2s infinite; }
     @keyframes pulse-blue { 0% { box-shadow: 0 0 0 0 rgba(0, 136, 204, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(0, 136, 204, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 136, 204, 0); } }
+    /* Live Dot Animation */
+    .live-dot { height: 8px; width: 8px; background-color: #00ff9d; border-radius: 50%; display: inline-block; box-shadow: 0 0 8px #00ff9d; animation: blink 1.5s infinite; }
+    @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
   </style>
 </head>
 
@@ -134,6 +137,17 @@
 
         <main class="flex-grow overflow-y-auto pb-20">
           <div id="home-page" class="p-4 space-y-6 sub-page">
+            
+            <div class="card-bg p-3 rounded-full border border-gray-800 flex items-center justify-between shadow-sm">
+                <div class="flex items-center gap-2 pl-2">
+                    <span class="live-dot"></span>
+                    <span class="text-xs text-gray-300 uppercase tracking-wider font-bold">Live Users</span>
+                </div>
+                <div class="text-accent font-bold text-sm bg-[#0b0e14] px-4 py-1 rounded-full border border-gray-700">
+                    <span id="live-member-count">0</span> Online
+                </div>
+            </div>
+
             <div class="card-bg p-4 rounded-lg flex items-center justify-between border-l-4 border-accent shadow-lg">
               <div>
                 <p class="text-gray-400 text-sm">Your Balance</p>
@@ -492,6 +506,17 @@
       }
     }
 
+    // --- NEW: Display Total Registered Users as "Live Users" ---
+    function listenToAppStats() {
+        const usersRef = collection(db, "users");
+        onSnapshot(usersRef, (snapshot) => {
+            const liveCountElement = document.getElementById('live-member-count');
+            if(liveCountElement) {
+                liveCountElement.textContent = snapshot.size;
+            }
+        });
+    }
+
     window.onload = async () => {
       lucide.createIcons();
       setupEventListeners();
@@ -509,11 +534,12 @@
             await fetchUserData();
             await fetchAppConfig();
             listenForNotifications();
+            listenToAppStats(); // Start Stats Listener
             if (!await checkDeviceSecurity()) { showLoader(false); return; }
             updateUI();
             showMainPage('app-container');
             if(!document.querySelector('.sub-page.active')) {
-               window.navigateTo('home-page');
+                window.navigateTo('home-page');
             }
             showTelegramModal();
         } catch (error) {
@@ -645,11 +671,10 @@
           if (snap.exists()) {
               appConfig = snap.data();
               if(!appConfig.minWithdrawal) appConfig.minWithdrawal = 5000;
-              if(!appConfig.dailyAdLimit) appConfig.dailyAdLimit = 30; // UPDATED: Default to 30
+              if(!appConfig.dailyAdLimit) appConfig.dailyAdLimit = 30; 
               if(!appConfig.coinValueCoins) appConfig.coinValueCoins = 1000;
               if(!appConfig.coinValueTaka) appConfig.coinValueTaka = 10;
               if(!appConfig.paymentMethods) appConfig.paymentMethods = ['Bkash', 'Nagad', 'Rocket'];
-              // IMPORTANT: Get restriction setting
               if(typeof appConfig.restrictNewUsers === 'undefined') appConfig.restrictNewUsers = false;
           }
       } catch(e) { console.warn("Config load failed, using defaults"); }
@@ -693,7 +718,6 @@
          manualBtn.classList.add('opacity-50', 'cursor-not-allowed');
       }
 
-      // NEW: Check for New User Restriction
       const walletContent = document.getElementById('wallet-content-area');
       const restrictedMsg = document.getElementById('withdrawal-restricted-msg');
       
@@ -714,7 +738,6 @@
       }
     }
 
-    // EXPOSE FUNCTION TO WINDOW FOR INLINE HTML ACCESS
     window.navigateTo = function(pageId) {
       document.querySelectorAll(".sub-page").forEach(p => p.classList.remove("active"));
       document.getElementById(pageId).classList.add("active");
@@ -727,7 +750,6 @@
       if(pageId === 'refer-page') loadReferralList();
     }
 
-    // UPDATED FUNCTION: Now updates the total count dynamically
     async function loadReferralList() {
         const list = document.getElementById('referral-list');
         const totalCountEl = document.getElementById('total-referrals-count');
@@ -755,13 +777,11 @@
         }
     }
 
-    // --- FIXED START TIMER TASK ---
     function startTimerTask(seconds, reward) {
       timerModal.classList.remove('hidden');
       let timeLeft = seconds;
       countdownDisplay.textContent = timeLeft;
       
-      // Clear previous interval if any
       if (activeTask && activeTask.interval) {
           clearInterval(activeTask.interval);
       }
@@ -772,18 +792,12 @@
         if (timeLeft <= 0) {
           clearInterval(interval);
           timerModal.classList.add('hidden');
-          
-          // Secure the ID
           const currentTaskId = activeTask ? activeTask.taskId : null;
-          
-          // FIX: Reset task before reward to unlock
           activeTask = null;
-
           await addReward(reward, currentTaskId);
         }
       }, 1000);
 
-      // Store interval
       if(activeTask) {
           activeTask.interval = interval;
       }
@@ -807,7 +821,6 @@
       if (taskId) {
           const taskCounts = userData.taskCounts || {};
           const currentTaskCount = taskCounts[taskId] || 0;
-          // UPDATED: Limit 6
           if (currentTaskCount >= 6) {
               showAlert("Daily limit (6) reached for this specific task!");
               return false;
@@ -816,7 +829,6 @@
       return true;
     }
 
-    // --- FIXED VISIT WEBSITE ---
     window.visitWebsite = async function(url, seconds, taskId) {
       if (activeTask) {
           showAlert("A task is already running! Please wait.");
@@ -862,9 +874,7 @@
               activeTask.window.close();
           }
           timerModal.classList.add('hidden');
-          
           const currentTaskId = activeTask.taskId;
-          // FIX: Reset Task
           activeTask = null;
           await addReward(50, currentTaskId);
         } else {
@@ -875,7 +885,6 @@
 
     document.addEventListener("visibilitychange", async () => {
       if (document.visibilityState === "visible" && activeTask && !activeTask.isCompleted) {
-        // If it's a website visit task
         if (activeTask.window) {
             const currentTime = Date.now();
             const timeSpentInSeconds = (currentTime - activeTask.startTime) / 1000;
@@ -884,15 +893,11 @@
                     clearInterval(activeTask.interval);
                 }
                 timerModal.classList.add('hidden');
-                
-                // Reset UI
                 const modalTitle = timerModal.querySelector('h3');
                 const modalDesc = timerModal.querySelector('p');
                 if(modalTitle) modalTitle.textContent = "Please Wait";
                 if(modalDesc) modalDesc.textContent = "Do not close the browser or app.";
-                
                 const requiredTime = activeTask.duration;
-                // FIX: Reset task on failure
                 activeTask = null;
                 showAlert(`❌ Task Failed! You returned too early.\nYou only waited ${Math.floor(timeSpentInSeconds)} seconds.\nPlease stay for the full ${requiredTime} seconds.`);
             }
@@ -930,13 +935,9 @@
       showAlert(`অভিনন্দন! আপনি ${reward} কয়েন পেয়েছেন।`);
     }
 
-    // --- FIXED CLAIM REWARD ---
     window.claimReward = async (type, taskId) => {
       if (!await validateTask(taskId)) return;
-      
-      // Mark task started
       activeTask = { taskId: taskId, startTime: Date.now() }; 
-
       if (type === 'dailyClick') return startTimerTask(30, 50);
 
       if (typeof window.show_10514704 === 'function') {
@@ -949,13 +950,11 @@
             showAlert("অ্যাড লোড করতে সমস্যা হয়েছে।"); 
         } finally { 
             showLoader(false); 
-            // FIX: Reset task in finally block
             activeTask = null;
         }
       } else {
          activeTask = null;
-         // NEW ALERT MESSAGE
-         showAlert("অ্যাড লোড হচ্ছে না! দয়া করে আপনার ব্রাউজারের Ad-Blocker/Brave shield অথবা VPN বন্ধ করুন এবং পেজটি রিফ্রেশ করে আবার চেষ্টা করুন।");
+         showAlert("অ্যাড লোড হচ্ছে না! দয়া করে আপনার ব্রাউজারের Ad-Blocker/Brave shield অথবা VPN বন্ধ করুন এবং পেজটি রিফ্রেশ করে আবার চেষ্টা করুন।");
       }
     };
 
@@ -994,7 +993,7 @@
              const referrerData = referrerDoc.data();
              referredByUid = referrerData.uid;
              const currentCount = referrerData.referralCount || 0;
-             const reward = 50; // UPDATED REFERRAL REWARD
+             const reward = 50; 
              await updateDoc(doc(db, "users", referredByUid), { 
                  balance: (referrerData.balance || 0) + reward,
                  referralCount: currentCount + 1
@@ -1007,7 +1006,7 @@
           taskCounts: {},
           registeredDevice: { deviceId: deviceId, ip: userIP, registeredAt: serverTimestamp() }
         });
-      } catch (e) { showAlert(e.code === 'auth/email-already-in-use' ? "এই ইমেইল ইতিমধ্যে ব্যবহার করা হয়েছে।" : "অ্যাকাউন্ট তৈরি করা যাচ্ছেম্ভর না।"); }
+      } catch (e) { showAlert(e.code === 'auth/email-already-in-use' ? "এই ইমেইল ইতিমধ্যে ব্যবহার করা হয়েছে।" : "অ্যাকাউন্ট তৈরি করা যাচ্ছে না।"); }
       showLoader(false);
     }
 
@@ -1035,7 +1034,7 @@
                 const referrerDoc = querySnapshot.docs[0];
                 const referrerData = referrerDoc.data();
                 const currentCount = referrerData.referralCount || 0;
-                const reward = 50; // UPDATED REFERRAL REWARD
+                const reward = 50; 
                 await updateDoc(doc(db, "users", referrerData.uid), { 
                     balance: (referrerData.balance || 0) + reward,
                     referralCount: currentCount + 1
@@ -1057,8 +1056,6 @@
       if (userData.registeredDevice && userData.registeredDevice.deviceId !== deviceId) {
         return showAlert("Withdrawal is only allowed from your registered device.");
       }
-      
-      // NEW: Double check restriction before processing
       if (appConfig.restrictNewUsers && userData.registeredDevice && userData.registeredDevice.registeredAt) {
           const regTime = userData.registeredDevice.registeredAt.seconds * 1000;
           if (regTime > CUTOFF_TIMESTAMP) {
@@ -1243,4 +1240,3 @@
   </script>
 </body>
 </html>
-
