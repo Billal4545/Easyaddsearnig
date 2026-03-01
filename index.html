@@ -39,7 +39,6 @@
     @keyframes pulse { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
     .tg-pulse { animation: pulse-blue 2s infinite; }
     @keyframes pulse-blue { 0% { box-shadow: 0 0 0 0 rgba(0, 136, 204, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(0, 136, 204, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 136, 204, 0); } }
-    /* Live Dot Animation */
     .live-dot { height: 8px; width: 8px; background-color: #00ff9d; border-radius: 50%; display: inline-block; box-shadow: 0 0 8px #00ff9d; animation: blink 1.5s infinite; }
     @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
   </style>
@@ -185,7 +184,7 @@
                       <p class="text-xs font-medium">Instant Reward (Limit 6)</p>
                     </div>
                   </div>
-                  <button class="bg-[#161b22] text-[#00ff9d] font-bold px-6 py-2 rounded-lg text-sm btn" onclick="claimReward('interstitial', 'task_video')">Claim</button>
+                  <button class="bg-[#161b22] text-[#00ff9d] font-bold px-6 py-2 rounded-lg text-sm btn" onclick="claimReward('video', 'task_video')">Claim</button>
                 </div>
 
                 <div class="card-bg p-3 rounded-lg flex items-center justify-between transform active:scale-95 transition border border-gray-800">
@@ -506,7 +505,6 @@
       }
     }
 
-    // --- NEW: Display Total Registered Users as "Live Users" ---
     function listenToAppStats() {
         const usersRef = collection(db, "users");
         onSnapshot(usersRef, (snapshot) => {
@@ -534,7 +532,7 @@
             await fetchUserData();
             await fetchAppConfig();
             listenForNotifications();
-            listenToAppStats(); // Start Stats Listener
+            listenToAppStats(); 
             if (!await checkDeviceSecurity()) { showLoader(false); return; }
             updateUI();
             showMainPage('app-container');
@@ -693,7 +691,7 @@
       document.getElementById('rate-display').textContent = `Rate: ${appConfig.coinValueCoins} Coins = ${appConfig.coinValueTaka} ৳`;
       const methodSelect = document.getElementById('withdraw-method');
       if(appConfig.paymentMethods && appConfig.paymentMethods.length > 0) {
-          methodSelect.innerHTML = appConfig.paymentMethods.map(m => `<option value="${m}">${m}</option>`).join('');
+        methodSelect.innerHTML = appConfig.paymentMethods.map(m => `<option value="${m}">${m}</option>`).join('');
       }
       
       const today = new Date().toISOString().split('T')[0];
@@ -935,11 +933,11 @@
       showAlert(`অভিনন্দন! আপনি ${reward} কয়েন পেয়েছেন।`);
     }
 
+    // --- আপডেটেড ফাংশন: অ্যাড নেটওয়ার্ক স্ক্রিপ্ট সহ ---
     window.claimReward = async (type, taskId) => {
       if (!await validateTask(taskId)) return;
       activeTask = { taskId: taskId, startTime: Date.now() }; 
-      if (type === 'dailyClick') return startTimerTask(30, 50);
-
+      
       if (typeof window.show_10514704 === 'function') {
         showLoader(true);
         try {
@@ -954,7 +952,7 @@
         }
       } else {
          activeTask = null;
-         showAlert("অ্যাড লোড হচ্ছে না! দয়া করে আপনার ব্রাউজারের Ad-Blocker/Brave shield অথবা VPN বন্ধ করুন এবং পেজটি রিফ্রেশ করে আবার চেষ্টা করুন।");
+         showAlert("অ্যাড লোড হচ্ছে না! দয়া করে আপনার ব্রাউজারের Ad-Blocker বন্ধ করুন এবং পেজটি রিফ্রেশ করে আবার চেষ্টা করুন।");
       }
     };
 
