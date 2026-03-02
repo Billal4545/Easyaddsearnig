@@ -925,27 +925,18 @@
       }, 1000);
     }
 
-    // Visibility Change Listener (Anti-Cheat)
+    // Visibility Change Listener (MODIFIED TO FIX THE BUG)
     document.addEventListener("visibilitychange", async () => {
+      // আমরা আগের কড়াকড়ি নিয়মটি বাতিল করে দিয়েছি।
+      // এখন ইউজার যদি আগে ফিরেও আসে (বা অ্যাড নেটওয়ার্ক জোর করে ফিরিয়ে আনে),
+      // টাস্ক ফেইল হবে না। টাইমার ব্যাকগ্রাউন্ডে চলতে থাকবে এবং সময় শেষ হলে কয়েন অ্যাড হবে।
       if (document.visibilityState === "visible" && activeTask && !activeTask.isCompleted) {
-        if (activeTask.window) {
-            const currentTime = Date.now();
-            const timeSpentInSeconds = (currentTime - activeTask.startTime) / 1000;
-            if (timeSpentInSeconds < activeTask.duration) {
-                // User returned too early
-                if (activeTask.interval) {
-                    clearInterval(activeTask.interval);
-                }
-                timerModal.classList.add('hidden');
-                // Reset modal text
-                const modalTitle = timerModal.querySelector('h3');
-                const modalDesc = timerModal.querySelector('p');
-                if(modalTitle) modalTitle.textContent = "Please Wait";
-                if(modalDesc) modalDesc.textContent = "Do not close the browser or app.";
-                const requiredTime = activeTask.duration;
-                activeTask = null;
-                showAlert(`❌ Task Failed! You returned too early.\nYou only waited ${Math.floor(timeSpentInSeconds)} seconds.\nPlease stay for the full ${requiredTime} seconds.`);
-            }
+        const currentTime = Date.now();
+        const timeSpentInSeconds = (currentTime - activeTask.startTime) / 1000;
+        
+        if (timeSpentInSeconds < activeTask.duration) {
+            console.log(`User returned early (${Math.floor(timeSpentInSeconds)}s). Timer will continue.`);
+            // এখানে Task Fail এর কোনো কোড নেই, তাই টাইমার স্বাভাবিকভাবে জিরো পর্যন্ত যাবে।
         }
       }
     });
