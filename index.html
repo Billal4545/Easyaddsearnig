@@ -233,7 +233,7 @@
                         <p class="text-xs text-gray-400">Wait 20 Seconds (Limit 6)</p>
                       </div>
                     </div>
-                    <button class="bg-[#00ff9d] text-black font-bold px-6 py-2 rounded-lg text-sm btn" onclick="visitWebsite('earningpost6.blogspot.com', 20, 'task_visit5')">Visit</button>
+                    <button class="bg-[#00ff9d] text-black font-bold px-6 py-2 rounded-lg text-sm btn" onclick="visitWebsite('earningblog3.blogspot.com', 20, 'task_visit5')">Visit</button>
                 </div>
 
               </div>
@@ -521,7 +521,7 @@
 
     async function cleanupSession() {
       if (currentUser) {
-        try { await deleteDoc(doc(db, "active_sessions", currentUser.uid)); } catch (e) {}
+        try { await deleteDoc(doc(db, "active_sessions", currentUser.uid)); } catch (e) { console.error("Session cleanup failed", e); }
       }
     }
 
@@ -803,42 +803,20 @@
                 const joinDate = data.registeredDevice && data.registeredDevice.registeredAt 
                     ? new Date(data.registeredDevice.registeredAt.seconds * 1000).toLocaleDateString()
                     : 'Unknown';
-                list.innerHTML += `<div class="bg-gray-800 p-3 rounded-lg flex items-center justify-between shadow-sm"><div class="flex items-center gap-3"><div class="bg-gray-700 p-2 rounded-full"><i data-lucide="user" class="w-4 h-4 text-gray-300"></i></div><div class="text-left"><p class="text-sm font-bold text-white">${data.name}</p><p class="text-[10px] text-gray-500">Joined: ${joinDate}</p></div></div><span class="text-xs text-green-400 font-bold flex items-center gap-1"><i data-lucide="check-circle" class="w-3 h-3"></i> Referred</span></div>`;
+                // XSS PROTECTION: Sanitize user name before injecting to HTML
+                const safeName = data.name ? data.name.replace(/</g, "&lt;").replace(/>/g, "&gt;") : "Unknown User";
+
+                list.innerHTML += `<div class="bg-gray-800 p-3 rounded-lg flex items-center justify-between shadow-sm"><div class="flex items-center gap-3"><div class="bg-gray-700 p-2 rounded-full"><i data-lucide="user" class="w-4 h-4 text-gray-300"></i></div><div class="text-left"><p class="text-sm font-bold text-white">${safeName}</p><p class="text-[10px] text-gray-500">Joined: ${joinDate}</p></div></div><span class="text-xs text-green-400 font-bold flex items-center gap-1"><i data-lucide="check-circle" class="w-3 h-3"></i> Referred</span></div>`;
             });
             lucide.createIcons();
         } catch (e) {
+            console.error("Referral Load Error:", e);
             list.innerHTML = '<p class="text-red-400">Failed to load referrals.</p>';
             if(totalCountEl) totalCountEl.textContent = "0";
         }
     }
 
     // --- Task Logic (Timer & Validation) ---
-    function startTimerTask(seconds, reward) {
-      timerModal.classList.remove('hidden');
-      let timeLeft = seconds;
-      countdownDisplay.textContent = timeLeft;
-      
-      if (activeTask && activeTask.interval) {
-          clearInterval(activeTask.interval);
-      }
-
-      const interval = setInterval(async () => {
-        timeLeft--;
-        countdownDisplay.textContent = timeLeft;
-        if (timeLeft <= 0) {
-          clearInterval(interval);
-          timerModal.classList.add('hidden');
-          const currentTaskId = activeTask ? activeTask.taskId : null;
-          activeTask = null;
-          await addReward(reward, currentTaskId);
-        }
-      }, 1000);
-
-      if(activeTask) {
-          activeTask.interval = interval;
-      }
-    }
-
     async function validateTask(taskId) {
       // 1. Device Check
       if (userData.registeredDevice && userData.registeredDevice.deviceId !== deviceId) {
@@ -904,6 +882,16 @@
             clearInterval(activeTask ? activeTask.interval : undefined);
             return;
         }
+
+        // TASK BYPASS FIX: Check if user closed the window before timer finished
+        if (activeTask.window && activeTask.window.closed && !activeTask.isCompleted) {
+            clearInterval(activeTask.interval);
+            timerModal.classList.add('hidden');
+            showAlert("সতর্কতা: আপনি সময় শেষ হওয়ার আগেই ওয়েবসাইট কেটে দিয়েছেন! টাস্ক বাতিল করা হলো।");
+            activeTask = null;
+            return;
+        }
+
         const elapsed = Math.floor((Date.now() - activeTask.startTime) / 1000);
         let timeLeft = activeTask.duration - elapsed;
         
@@ -925,18 +913,14 @@
       }, 1000);
     }
 
-    // Visibility Change Listener (MODIFIED TO FIX THE BUG)
+    // Visibility Change Listener
     document.addEventListener("visibilitychange", async () => {
-      // আমরা আগের কড়াকড়ি নিয়মটি বাতিল করে দিয়েছি।
-      // এখন ইউজার যদি আগে ফিরেও আসে (বা অ্যাড নেটওয়ার্ক জোর করে ফিরিয়ে আনে),
-      // টাস্ক ফেইল হবে না। টাইমার ব্যাকগ্রাউন্ডে চলতে থাকবে এবং সময় শেষ হলে কয়েন অ্যাড হবে।
       if (document.visibilityState === "visible" && activeTask && !activeTask.isCompleted) {
         const currentTime = Date.now();
         const timeSpentInSeconds = (currentTime - activeTask.startTime) / 1000;
         
         if (timeSpentInSeconds < activeTask.duration) {
             console.log(`User returned early (${Math.floor(timeSpentInSeconds)}s). Timer will continue.`);
-            // এখানে Task Fail এর কোনো কোড নেই, তাই টাইমার স্বাভাবিকভাবে জিরো পর্যন্ত যাবে।
         }
       }
     });
@@ -1224,7 +1208,7 @@
       if (navigator.share) {
         try {
           await navigator.share({ title: 'Join Now', text: message });
-        } catch (e) {}
+        } catch (e) { console.error("Share error", e); }
       } else {
         try {
           await navigator.clipboard.writeText(message);
