@@ -81,11 +81,12 @@
         <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-accent"></div>
       </div>
 
-      <div id="timer-modal" class="hidden fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-[80] p-6">
-        <div class="bg-gray-800 rounded-lg p-8 w-full max-w-sm text-center">
-          <h3 class="text-xl font-bold mb-4 text-accent">Please Wait</h3>
-          <div class="text-4xl font-bold mb-4" id="countdown-display">0</div>
-          <p class="text-gray-400 text-sm">Do not close the browser or app.</p>
+      <div id="timer-modal" class="hidden fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-[80] p-6 backdrop-blur-sm">
+        <div class="bg-gray-800 rounded-xl border border-gray-700 p-8 w-full max-w-sm text-center shadow-2xl">
+          <h3 id="timer-title" class="text-xl font-bold mb-4 text-accent">টাস্ক প্রস্তুত</h3>
+          <p id="timer-desc" class="text-gray-300 text-sm mb-6 leading-relaxed">ওয়েবসাইটটি ওপেন করুন এবং নির্ধারিত সময় অপেক্ষা করুন।</p>
+          <div id="countdown-display" class="text-5xl font-bold mb-6 text-white hidden">20</div>
+          <button id="start-task-btn" class="w-full btn-accent py-3 rounded-lg font-bold text-lg shadow-lg transform active:scale-95 transition">ওয়েবসাইট ওপেন করুন</button>
         </div>
       </div>
 
@@ -386,22 +387,18 @@
       measurementId: "G-46K8PRGSX3"
     };
 
-    // Import Firebase SDKs (Added writeBatch)
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile, sendPasswordResetEmail, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
     import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc, serverTimestamp, query, where, getDocs, orderBy, deleteDoc, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // Global Variables
     let currentUser = null;
     let userData = null;
     let activeTask = null; 
 
-    // App Configuration (Defaults)
     let appConfig = { 
         minWithdrawal: 5000, 
         dailyAdLimit: 30, 
@@ -414,17 +411,14 @@
     let deviceId = null;
     let withdrawalListener = null;
 
-    // DATE CUTOFF FOR NEW USERS
     const CUTOFF_TIMESTAMP = 1771891200000; 
 
-    // DOM Elements
     const loader = document.getElementById('loader');
     const timerModal = document.getElementById('timer-modal');
     const countdownDisplay = document.getElementById('countdown-display');
     const popupModal = document.getElementById('notification-popup-modal');
 
     // --- Helper Functions ---
-
     window.closeTelegramModal = () => {
         document.getElementById('telegram-modal').classList.add('hidden');
     }
@@ -516,7 +510,7 @@
 
     async function cleanupSession() {
       if (currentUser) {
-        try { await deleteDoc(doc(db, "active_sessions", currentUser.uid)); } catch (e) { console.error("Session cleanup failed", e); }
+        try { await deleteDoc(doc(db, "active_sessions", currentUser.uid)); } catch (e) { }
       }
     }
 
@@ -530,7 +524,6 @@
         });
     }
 
-    // --- Main Initialization ---
     window.onload = async () => {
       lucide.createIcons();
       setupEventListeners();
@@ -557,7 +550,6 @@
             }
             showTelegramModal();
         } catch (error) {
-            console.error("Auth Loop Error:", error);
             showAlert("Connection Error. Please try again.");
         } finally {
             showLoader(false);
@@ -604,7 +596,6 @@
 
     function listenForNotifications() {
         try {
-            // Global Notifications
             const globalRef = collection(db, "global_notifications");
             const qGlobal = query(globalRef, orderBy("createdAt", "desc"));
             let isInitialLoad = true;
@@ -631,7 +622,6 @@
                 }
                 isInitialLoad = false;
             });
-            // Personal Notifications
             if(currentUser && currentUser.uid) {
                 const personalRef = collection(db, "users", currentUser.uid, "notifications");
                 const qPersonal = query(personalRef, orderBy("createdAt", "desc"));
@@ -658,7 +648,7 @@
                     isInitialPersonal = false;
                 });
             }
-        } catch(e) { console.error("Notification Error", e); }
+        } catch(e) { }
     }
 
     function markNotificationsRead() {
@@ -695,7 +685,7 @@
               if(!appConfig.paymentMethods) appConfig.paymentMethods = ['Bkash', 'Nagad', 'Rocket'];
               if(typeof appConfig.restrictNewUsers === 'undefined') appConfig.restrictNewUsers = false;
           }
-      } catch(e) { console.warn("Config load failed, using defaults"); }
+      } catch(e) { }
       updateUI();
     }
 
@@ -826,89 +816,97 @@
       return true;
     }
 
-    // UPDATED Website Visit Task Function (Popup Blocker Fix)
+    // UPDATED Website Visit Task Function (2-Step Direct Click Fix)
     window.visitWebsite = async function(url, seconds, taskId) {
       if (activeTask) {
           showAlert("A task is already running! Please wait.");
           return;
       }
       
-      // ওপেন উইন্ডো আগে করা হলো যেন ব্রাউজার ব্লক করতে না পারে
-      let taskWindow = null;
-      try {
-          taskWindow = window.open('about:blank', '_blank');
-      } catch(e) {
-          showAlert("অনুগ্রহ করে আপনার ব্রাউজারের পপ-আপ ব্লকার বন্ধ করুন!");
-          return;
-      }
+      showLoader(true);
+      const isValid = await validateTask(taskId);
+      showLoader(false);
 
-      if (!await validateTask(taskId)) {
-          if (taskWindow) taskWindow.close();
-          return;
-      }
-      
+      if (!isValid) return;
+
       let finalUrl = url;
-      if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
-          finalUrl = 'https://' + finalUrl;
-      }
-      
-      if (taskWindow) {
-          taskWindow.location.href = finalUrl;
-      } else {
-         showAlert("অনুগ্রহ করে ব্রাউজারের পপ-আপ পারমিশন দিন।");
-         return;
-      }
-      
-      activeTask = {
-        url: finalUrl,
-        duration: seconds,
-        startTime: Date.now(), 
-        taskId: taskId,
-        window: taskWindow,
-        isCompleted: false
-      };
+      if (!finalUrl.startsWith('http')) finalUrl = 'https://' + finalUrl;
+
+      // Prepare the Modal for 2nd Step
+      const timerModal = document.getElementById('timer-modal');
+      const title = document.getElementById('timer-title');
+      const desc = document.getElementById('timer-desc');
+      const countdown = document.getElementById('countdown-display');
+      const startBtn = document.getElementById('start-task-btn');
+
+      title.textContent = "টাস্ক প্রস্তুত!";
+      desc.textContent = `নিচের বাটনে ক্লিক করে ওয়েবসাইটটি ওপেন করুন এবং ${seconds} সেকেন্ড অপেক্ষা করুন।`;
+      countdown.classList.add('hidden');
+      startBtn.classList.remove('hidden');
+      startBtn.textContent = "ওয়েবসাইট ওপেন করুন";
 
       timerModal.classList.remove('hidden');
-      const modalTitle = timerModal.querySelector('h3');
-      const modalDesc = timerModal.querySelector('p');
-      if(modalTitle) modalTitle.textContent = "Verifying Task...";
-      if(modalDesc) modalDesc.textContent = `Please stay on the website. Auto-returning in ${seconds}s...`;
-      countdownDisplay.textContent = seconds;
 
-      // Background Timer
-      activeTask.interval = setInterval(async () => {
-        if (!activeTask || activeTask.isCompleted) {
-            clearInterval(activeTask ? activeTask.interval : undefined);
-            return;
-        }
+      // Overwrite the button onclick to start the task
+      startBtn.onclick = function() {
+          // Synchronous window open - এটি পিসি বা মোবাইল কোথাও ব্লক হবে না
+          let taskWindow = window.open(finalUrl, '_blank');
 
-        if (activeTask.window && activeTask.window.closed && !activeTask.isCompleted) {
-            clearInterval(activeTask.interval);
-            timerModal.classList.add('hidden');
-            showAlert("সতর্কতা: আপনি সময় শেষ হওয়ার আগেই ওয়েবসাইট কেটে দিয়েছেন! টাস্ক বাতিল করা হলো।");
-            activeTask = null;
-            return;
-        }
+          // Hide button, show timer
+          startBtn.classList.add('hidden');
+          countdown.classList.remove('hidden');
+          countdown.textContent = seconds;
+          title.textContent = "অপেক্ষা করুন...";
+          desc.textContent = "ওয়েবসাইটটি ভিজিট করা শেষ হলে অটোমেটিক কয়েন যোগ হবে। আপনি ব্যাক করে আসতে পারবেন।";
 
-        const elapsed = Math.floor((Date.now() - activeTask.startTime) / 1000);
-        let timeLeft = activeTask.duration - elapsed;
-        
-        if (timeLeft <= 0) {
-          timeLeft = 0;
-          activeTask.isCompleted = true; 
-          clearInterval(activeTask.interval);
-          countdownDisplay.textContent = "0";
-          if (activeTask.window && !activeTask.window.closed) {
-              activeTask.window.close();
-          }
-          timerModal.classList.add('hidden');
-          const currentTaskId = activeTask.taskId;
-          activeTask = null;
-          await addReward(50, currentTaskId);
-        } else {
-          countdownDisplay.textContent = timeLeft;
-        }
-      }, 1000);
+          activeTask = {
+              url: finalUrl,
+              duration: seconds,
+              startTime: Date.now(),
+              taskId: taskId,
+              window: taskWindow,
+              isCompleted: false
+          };
+
+          // Start Timer
+          activeTask.interval = setInterval(async () => {
+              if (!activeTask || activeTask.isCompleted) {
+                  clearInterval(activeTask ? activeTask.interval : undefined);
+                  return;
+              }
+
+              const elapsed = Math.floor((Date.now() - activeTask.startTime) / 1000);
+              let timeLeft = activeTask.duration - elapsed;
+
+              if (timeLeft <= 0) {
+                  timeLeft = 0;
+                  activeTask.isCompleted = true;
+                  clearInterval(activeTask.interval);
+
+                  countdown.textContent = "0";
+                  title.textContent = "টাস্ক সম্পন্ন!";
+                  desc.textContent = "কয়েন যোগ করা হচ্ছে...";
+
+                  // Try to auto-close (works on PC, fails safely on Mobile)
+                  try {
+                      if (activeTask.window && !activeTask.window.closed) {
+                          activeTask.window.close();
+                      }
+                  } catch(e) {}
+
+                  // Slight delay so user can read "Task Completed" message if they manually switch back
+                  setTimeout(async () => {
+                       timerModal.classList.add('hidden');
+                       const currentTaskId = activeTask.taskId;
+                       activeTask = null;
+                       await addReward(50, currentTaskId);
+                  }, 1500);
+
+              } else {
+                  countdown.textContent = timeLeft;
+              }
+          }, 1000);
+      };
     }
 
     async function addReward(reward, taskId) {
@@ -963,7 +961,6 @@
         showLoader(false);
     }
 
-    // UPDATED Signup (Batch Write logic)
     async function handleSignup() {
       const name = document.getElementById('signup-name').value;
       const email = document.getElementById('signup-email').value;
