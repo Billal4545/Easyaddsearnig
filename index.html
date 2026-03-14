@@ -189,7 +189,7 @@
                       <p class="text-xs text-gray-400">Wait 20 Seconds (Limit 6)</p>
                     </div>
                   </div>
-                  <button class="bg-[#00ff9d] text-black font-bold px-6 py-2 rounded-lg text-sm btn" onclick="visitWebsite('https://sites.google.com/view/website-visit-1?usp=sharing', 20, 'task_visit1')">Visit</button>
+                  <button class="bg-[#00ff9d] text-black font-bold px-6 py-2 rounded-lg text-sm btn" onclick="visitWebsite('https://earnigpost1.blogspot.com', 20, 'task_visit1')">Visit</button>
                 </div>
 
                 <div class="card-bg p-3 rounded-lg flex items-center justify-between transform active:scale-95 transition border border-gray-800">
@@ -200,7 +200,7 @@
                         <p class="text-xs text-gray-400">Wait 20 Seconds (Limit 6)</p>
                       </div>
                     </div>
-                    <button class="bg-[#00ff9d] text-black font-bold px-6 py-2 rounded-lg text-sm btn" onclick="visitWebsite('https://sites.google.com/view/website-visits-2?usp=sharing', 20, 'task_visit2')">Visit</button>
+                    <button class="bg-[#00ff9d] text-black font-bold px-6 py-2 rounded-lg text-sm btn" onclick="visitWebsite('https://earningpost2.blogspot.com', 20, 'task_visit2')">Visit</button>
                 </div>
         
                 <div class="card-bg p-3 rounded-lg flex items-center justify-between transform active:scale-95 transition border border-gray-800">
@@ -211,7 +211,7 @@
                         <p class="text-xs text-gray-400">Wait 20 Seconds (Limit 6)</p>
                       </div>
                     </div>
-                    <button class="bg-[#00ff9d] text-black font-bold px-6 py-2 rounded-lg text-sm btn" onclick="visitWebsite('https://sites.google.com/view/websitevisits3?usp=sharing', 20, 'task_visit3')">Visit</button>
+                    <button class="bg-[#00ff9d] text-black font-bold px-6 py-2 rounded-lg text-sm btn" onclick="visitWebsite('https://earningblog3.blogspot.com', 20, 'task_visit3')">Visit</button>
                 </div>
         
                 <div class="card-bg p-3 rounded-lg flex items-center justify-between transform active:scale-95 transition border border-gray-800">
@@ -222,7 +222,7 @@
                         <p class="text-xs text-gray-400">Wait 20 Seconds (Limit 6)</p>
                       </div>
                     </div>
-                    <button class="bg-[#00ff9d] text-black font-bold px-6 py-2 rounded-lg text-sm btn" onclick="visitWebsite('https://sites.google.com/view/websitevisits4?usp=sharing', 20, 'task_special')">Visit</button>
+                    <button class="bg-[#00ff9d] text-black font-bold px-6 py-2 rounded-lg text-sm btn" onclick="visitWebsite('https://earningpost4.blogspot.com', 20, 'task_special')">Visit</button>
                 </div>
 
                 <div class="card-bg p-3 rounded-lg flex items-center justify-between transform active:scale-95 transition border border-gray-800">
@@ -233,7 +233,7 @@
                         <p class="text-xs text-gray-400">Wait 20 Seconds (Limit 6)</p>
                       </div>
                     </div>
-                    <button class="bg-[#00ff9d] text-black font-bold px-6 py-2 rounded-lg text-sm btn" onclick="visitWebsite('https://sites.google.com/view/websitevisits5?usp=sharing', 20, 'task_visit5')">Visit</button>
+                    <button class="bg-[#00ff9d] text-black font-bold px-6 py-2 rounded-lg text-sm btn" onclick="visitWebsite('https://earningpost5.blogspot.com', 20, 'task_visit5')">Visit</button>
                 </div>
 
               </div>
@@ -386,10 +386,10 @@
       measurementId: "G-46K8PRGSX3"
     };
 
-    // Import Firebase SDKs
+    // Import Firebase SDKs (Added writeBatch)
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile, sendPasswordResetEmail, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc, serverTimestamp, query, where, getDocs, orderBy, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc, serverTimestamp, query, where, getDocs, orderBy, deleteDoc, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
     // Initialize Firebase
     const app = initializeApp(firebaseConfig);
@@ -414,7 +414,7 @@
     let deviceId = null;
     let withdrawalListener = null;
 
-    // DATE CUTOFF FOR NEW USERS (Example: Feb 20, 2026)
+    // DATE CUTOFF FOR NEW USERS
     const CUTOFF_TIMESTAMP = 1771891200000; 
 
     // DOM Elements
@@ -425,7 +425,6 @@
 
     // --- Helper Functions ---
 
-    // Telegram Modal Functions
     window.closeTelegramModal = () => {
         document.getElementById('telegram-modal').classList.add('hidden');
     }
@@ -434,7 +433,6 @@
         lucide.createIcons();
     }
 
-    // Get User IP
     async function getIPAddress() {
       try {
         const controller = new AbortController();
@@ -444,12 +442,10 @@
         const data = await response.json();
         return data.ip;
       } catch (error) { 
-          console.warn("IP Fetch failed or timed out:", error);
           return 'unknown'; 
       }
     }
 
-    // Generate/Get Device ID
     function generateDeviceId() {
       let deviceId = localStorage.getItem('device_id');
       if (!deviceId) {
@@ -459,7 +455,6 @@
       return deviceId;
     }
 
-    // Security Checks
     async function checkDeviceSecurity() {
       const userRef = doc(db, "users", currentUser.uid);
       const userSnap = await getDoc(userRef);
@@ -525,7 +520,6 @@
       }
     }
 
-    // Live Stats Listener
     function listenToAppStats() {
         const usersRef = collection(db, "users");
         onSnapshot(usersRef, (snapshot) => {
@@ -545,7 +539,6 @@
       onAuthStateChanged(auth, handleAuthStateChange);
     };
 
-    // Auth State Handler
     async function handleAuthStateChange(user) {
       if (user) {
         currentUser = user;
@@ -680,7 +673,6 @@
           userData = snap.data();
           if(!userData.taskCounts) userData.taskCounts = {};
       } else {
-        // Create new user doc if doesn't exist
         const referralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
         userData = {
           uid: currentUser.uid, name: currentUser.displayName || "User", email: currentUser.email, balance: 50, referralCode: referralCode, dailyAdCount: 0, lastAdWatchDate: new Date().toISOString().split('T')[0],
@@ -696,7 +688,6 @@
           const snap = await getDoc(doc(db, "config", "main"));
           if (snap.exists()) {
               appConfig = snap.data();
-              // Set defaults if config values are missing
               if(!appConfig.minWithdrawal) appConfig.minWithdrawal = 5000;
               if(!appConfig.dailyAdLimit) appConfig.dailyAdLimit = 30; 
               if(!appConfig.coinValueCoins) appConfig.coinValueCoins = 1000;
@@ -710,16 +701,12 @@
 
     function updateUI() {
       if (!userData) return;
-      // Update Balance Displays
       document.getElementById('coin-balance').textContent = userData.balance;
       document.getElementById('wallet-coin-balance').textContent = userData.balance;
-      // Update Profile info
       document.getElementById('profile-name').textContent = userData.name;
       document.getElementById('edit-profile-name').value = userData.name;
       document.getElementById('profile-email').textContent = userData.email;
-      // Update Referral Info
       document.getElementById('referral-code').textContent = userData.referralCode;
-      // Update Wallet Info
       document.getElementById('dynamic-min-withdraw').textContent = appConfig.minWithdrawal;
       document.getElementById('rate-display').textContent = `Rate: ${appConfig.coinValueCoins} Coins = ${appConfig.coinValueTaka} ৳`;
       const methodSelect = document.getElementById('withdraw-method');
@@ -727,7 +714,6 @@
         methodSelect.innerHTML = appConfig.paymentMethods.map(m => `<option value="${m}">${m}</option>`).join('');
       }
       
-      // Update Daily Task Progress
       const today = new Date().toISOString().split('T')[0];
       let count = 0;
       if (userData.lastAdWatchDate === today) {
@@ -741,7 +727,7 @@
         const percentage = Math.min((count / limit) * 100, 100);
         progressBar.style.width = `${percentage}%`;
       }
-      // Update Referral Input State
+      
       const manualInput = document.getElementById('manual-refer-code');
       const manualBtn = document.getElementById('submit-refer-btn');
       if(userData.referredBy) {
@@ -751,7 +737,6 @@
          manualBtn.classList.add('opacity-50', 'cursor-not-allowed');
       }
 
-      // Withdrawal Restriction Logic
       const walletContent = document.getElementById('wallet-content-area');
       const restrictedMsg = document.getElementById('withdrawal-restricted-msg');
       
@@ -772,7 +757,7 @@
       }
     }
 
-    // --- Navigation & Page Loading ---
+    // --- Navigation ---
     window.navigateTo = function(pageId) {
       document.querySelectorAll(".sub-page").forEach(p => p.classList.remove("active"));
       document.getElementById(pageId).classList.add("active");
@@ -803,14 +788,12 @@
                 const joinDate = data.registeredDevice && data.registeredDevice.registeredAt 
                     ? new Date(data.registeredDevice.registeredAt.seconds * 1000).toLocaleDateString()
                     : 'Unknown';
-                // XSS PROTECTION: Sanitize user name before injecting to HTML
                 const safeName = data.name ? data.name.replace(/</g, "&lt;").replace(/>/g, "&gt;") : "Unknown User";
 
                 list.innerHTML += `<div class="bg-gray-800 p-3 rounded-lg flex items-center justify-between shadow-sm"><div class="flex items-center gap-3"><div class="bg-gray-700 p-2 rounded-full"><i data-lucide="user" class="w-4 h-4 text-gray-300"></i></div><div class="text-left"><p class="text-sm font-bold text-white">${safeName}</p><p class="text-[10px] text-gray-500">Joined: ${joinDate}</p></div></div><span class="text-xs text-green-400 font-bold flex items-center gap-1"><i data-lucide="check-circle" class="w-3 h-3"></i> Referred</span></div>`;
             });
             lucide.createIcons();
         } catch (e) {
-            console.error("Referral Load Error:", e);
             list.innerHTML = '<p class="text-red-400">Failed to load referrals.</p>';
             if(totalCountEl) totalCountEl.textContent = "0";
         }
@@ -818,12 +801,10 @@
 
     // --- Task Logic (Timer & Validation) ---
     async function validateTask(taskId) {
-      // 1. Device Check
       if (userData.registeredDevice && userData.registeredDevice.deviceId !== deviceId) {
         showAlert("Please use your registered device to complete tasks.");
         return false;
       }
-      // 2. Daily Limit Check
       const today = new Date().toISOString().split('T')[0];
       if (userData.lastAdWatchDate !== today) {
           userData.dailyAdCount = 0;
@@ -834,7 +815,6 @@
         showAlert(`Daily Total Limit (${appConfig.dailyAdLimit}) Reached! Come back tomorrow.`);
         return false;
       }
-      // 3. Specific Task Limit Check
       if (taskId) {
           const taskCounts = userData.taskCounts || {};
           const currentTaskCount = taskCounts[taskId] || 0;
@@ -846,19 +826,38 @@
       return true;
     }
 
-    // Website Visit Task Function
+    // UPDATED Website Visit Task Function (Popup Blocker Fix)
     window.visitWebsite = async function(url, seconds, taskId) {
       if (activeTask) {
           showAlert("A task is already running! Please wait.");
           return;
       }
-      if (!await validateTask(taskId)) return;
+      
+      // ওপেন উইন্ডো আগে করা হলো যেন ব্রাউজার ব্লক করতে না পারে
+      let taskWindow = null;
+      try {
+          taskWindow = window.open('about:blank', '_blank');
+      } catch(e) {
+          showAlert("অনুগ্রহ করে আপনার ব্রাউজারের পপ-আপ ব্লকার বন্ধ করুন!");
+          return;
+      }
+
+      if (!await validateTask(taskId)) {
+          if (taskWindow) taskWindow.close();
+          return;
+      }
+      
       let finalUrl = url;
       if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
           finalUrl = 'https://' + finalUrl;
       }
-      // Open in new tab/window
-      const taskWindow = window.open(finalUrl, '_blank');
+      
+      if (taskWindow) {
+          taskWindow.location.href = finalUrl;
+      } else {
+         showAlert("অনুগ্রহ করে ব্রাউজারের পপ-আপ পারমিশন দিন।");
+         return;
+      }
       
       activeTask = {
         url: finalUrl,
@@ -883,11 +882,10 @@
             return;
         }
 
-        // TASK BYPASS FIX: Check if user closed the window before timer finished
         if (activeTask.window && activeTask.window.closed && !activeTask.isCompleted) {
             clearInterval(activeTask.interval);
             timerModal.classList.add('hidden');
-            showAlert("সতর্কতা: আপনি সময় শেষ হওয়ার আগেই ওয়েবসাইট কেটে দিয়েছেন! টাস্ক বাতিল করা হলো।");
+            showAlert("সতর্কতা: আপনি সময় শেষ হওয়ার আগেই ওয়েবসাইট কেটে দিয়েছেন! টাস্ক বাতিল করা হলো।");
             activeTask = null;
             return;
         }
@@ -913,27 +911,13 @@
       }, 1000);
     }
 
-    // Visibility Change Listener
-    document.addEventListener("visibilitychange", async () => {
-      if (document.visibilityState === "visible" && activeTask && !activeTask.isCompleted) {
-        const currentTime = Date.now();
-        const timeSpentInSeconds = (currentTime - activeTask.startTime) / 1000;
-        
-        if (timeSpentInSeconds < activeTask.duration) {
-            console.log(`User returned early (${Math.floor(timeSpentInSeconds)}s). Timer will continue.`);
-        }
-      }
-    });
-
     async function addReward(reward, taskId) {
-      // Update session activity
       if (currentUser) {
         try { await updateDoc(doc(db, "active_sessions", currentUser.uid), { lastActive: serverTimestamp() }); } catch (e) {}
       }
       const today = new Date().toISOString().split('T')[0];
       const userRef = doc(db, "users", currentUser.uid);
       
-      // Reset daily counts if it's a new day
       if (userData.lastAdWatchDate !== today) {
           userData.dailyAdCount = 0;
           userData.taskCounts = {};
@@ -947,7 +931,6 @@
       
       const newBalance = (userData.balance || 0) + reward;
       
-      // Atomic update to Firestore
       await updateDoc(userRef, { 
           balance: newBalance, 
           dailyAdCount: newTotal,
@@ -955,7 +938,6 @@
           lastAdWatchDate: today 
       });
       
-      // Update local state and UI
       userData.balance = newBalance;
       userData.dailyAdCount = newTotal;
       userData.taskCounts = currentTaskCounts;
@@ -964,7 +946,7 @@
       showAlert(`অভিনন্দন! আপনি ${reward} কয়েন পেয়েছেন।`);
     }
 
-    // --- User Actions (Login, Signup, etc.) ---
+    // --- User Actions ---
     async function handlePasswordReset() {
         const email = document.getElementById('reset-email').value.trim();
         if (!email) return showAlert("Please enter your email.");
@@ -981,6 +963,7 @@
         showLoader(false);
     }
 
+    // UPDATED Signup (Batch Write logic)
     async function handleSignup() {
       const name = document.getElementById('signup-name').value;
       const email = document.getElementById('signup-email').value;
@@ -992,8 +975,10 @@
         const res = await createUserWithEmailAndPassword(auth, email, pass);
         await updateProfile(res.user, { displayName: name });
         
-        // Handle Referral Reward
+        const batch = writeBatch(db); 
+        const newUserRef = doc(db, "users", res.user.uid);
         let referredByUid = null;
+
         if(refCode) {
            const q = query(collection(db, "users"), where("referralCode", "==", refCode));
            const querySnapshot = await getDocs(q);
@@ -1003,20 +988,24 @@
              referredByUid = referrerData.uid;
              const currentCount = referrerData.referralCount || 0;
              const reward = 50; 
-             await updateDoc(doc(db, "users", referredByUid), { 
+             const referrerRef = doc(db, "users", referredByUid);
+             
+             batch.update(referrerRef, { 
                  balance: (referrerData.balance || 0) + reward,
                  referralCount: currentCount + 1
              });
            }
         }
         
-        // Create User Document
-        await setDoc(doc(db, "users", res.user.uid), {
+        batch.set(newUserRef, {
           uid: res.user.uid, name: name, email: email, balance: 50, referralCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
           referredBy: referredByUid, dailyAdCount: 0, lastAdWatchDate: new Date().toISOString().split('T')[0],
           taskCounts: {},
           registeredDevice: { deviceId: deviceId, ip: userIP, registeredAt: serverTimestamp() }
         });
+
+        await batch.commit();
+
       } catch (e) { showAlert(e.code === 'auth/email-already-in-use' ? "এই ইমেইল ইতিমধ্যে ব্যবহার করা হয়েছে।" : "অ্যাকাউন্ট তৈরি করা যাচ্ছে না।"); }
       showLoader(false);
     }
@@ -1064,11 +1053,9 @@
     }
 
     async function handleWithdrawal() {
-      // Device Check
       if (userData.registeredDevice && userData.registeredDevice.deviceId !== deviceId) {
         return showAlert("Withdrawal is only allowed from your registered device.");
       }
-      // New User Restriction Check
       if (appConfig.restrictNewUsers && userData.registeredDevice && userData.registeredDevice.registeredAt) {
           const regTime = userData.registeredDevice.registeredAt.seconds * 1000;
           if (regTime > CUTOFF_TIMESTAMP) {
@@ -1115,13 +1102,11 @@
         }
         showLoader(true);
         try {
-            // Update Name
             if (newName !== currentUser.displayName) {
                 await updateProfile(currentUser, { displayName: newName });
                 await updateDoc(doc(db, "users", currentUser.uid), { name: newName });
                 userData.name = newName;
             }
-            // Update Password
             if (newPass || oldPass || confirmPass) {
                 if (!oldPass) throw new Error("Please enter your previous password.");
                 if (newPass.length < 6) throw new Error("New password must be at least 6 characters.");
@@ -1131,7 +1116,6 @@
                 await reauthenticateWithCredential(currentUser, credential);
                 await updatePassword(currentUser, newPass);
                 showAlert("Profile and Password updated successfully!");
-                // Clear password fields
                 document.getElementById('edit-profile-old-pass').value = '';
                 document.getElementById('edit-profile-new-pass').value = '';
                 document.getElementById('edit-profile-confirm-pass').value = '';
@@ -1140,13 +1124,11 @@
             }
             updateUI();
         } catch (error) {
-            console.error(error);
             showAlert("Update Failed: " + error.message);
         }
         showLoader(false);
     }
 
-    // Withdrawal Amount Input Listener for Conversion Preview
     document.getElementById('withdraw-amount').addEventListener('input', (e) => {
         const amount = parseInt(e.target.value) || 0;
         const preview = document.getElementById('conversion-preview');
@@ -1158,11 +1140,10 @@
         }
     });
 
-    // Load Withdrawal History
     function loadWithdrawalHistory() {
       const list = document.getElementById('withdrawal-history-list');
       if (withdrawalListener) {
-        withdrawalListener(); // Unsubscribe previous listener
+        withdrawalListener();
       }
       const q = query(collection(db, "withdrawals"), where("userId", "==", currentUser.uid), orderBy("createdAt", "desc"));
       withdrawalListener = onSnapshot(q, (snap) => {
@@ -1198,17 +1179,16 @@
       });
     }
 
-    // Share Functionality
     async function handleShare() {
       if (!userData || !userData.referralCode) return showAlert("Loading...");
-      const botUsername = "easyaddsearnig_bot"; // Replace with your actual bot username
+      const botUsername = "easyaddsearnig_bot"; 
       const link = `https://t.me/${botUsername}?start=${userData.referralCode}`;
       const message = `${link}\nCode: ${userData.referralCode}`;
       
       if (navigator.share) {
         try {
           await navigator.share({ title: 'Join Now', text: message });
-        } catch (e) { console.error("Share error", e); }
+        } catch (e) { }
       } else {
         try {
           await navigator.clipboard.writeText(message);
@@ -1227,7 +1207,6 @@
       document.querySelectorAll('.nav-link').forEach(l => { l.onclick = (e) => { e.preventDefault(); window.navigateTo(l.dataset.page); }; });
       document.getElementById('notification-bell').onclick = () => { window.navigateTo('notification-page'); };
       
-      // Auth View Toggles
       document.getElementById('show-signup').onclick = () => { 
           document.getElementById('login-view').classList.add('hidden'); 
           document.getElementById('signup-view').classList.remove('hidden'); 
@@ -1255,7 +1234,6 @@
       document.getElementById('header-profile-btn').onclick = () => window.navigateTo('profile-page');
     }
 
-    // Utility Functions
     function showMainPage(id) {
       document.querySelectorAll('.main-page').forEach(p => p.classList.remove('active'));
       document.getElementById(id).classList.add('active');
@@ -1269,9 +1247,3 @@
   </script>
 </body>
 </html>
-
-
-
-
-
-
